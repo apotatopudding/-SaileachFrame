@@ -114,14 +114,17 @@ public class AdminService {
             if(this.enableMapper.canUseGroup(messageInfo.getGroupId(),1)==1){
                 this.enableMapper.closeGroup(messageInfo.getGroupId(), 0);
                 replayInfo.setReplayMessage("关闭成功");
-            }else {
+            }else if(this.enableMapper.canUseGroup(messageInfo.getGroupId(),0)==1){
                 replayInfo.setReplayMessage("请不要重复关闭");
+            }else {
+                this.enableMapper.closeGroup(messageInfo.getGroupId(), 0);
+                replayInfo.setReplayMessage("关闭成功");
             }
         }
         return replayInfo;
     }
 
-    @AngelinaGroup(keyWords = {"群组开启"},description = "开启某个群组所有接收消息（默认是开启的）")
+    //（暂时用不着，配置管理群组的时候使用）@AngelinaGroup(keyWords = {"群组开启"},description = "开启某个群组所有接收消息（默认是开启的）")
     public ReplayInfo openGroup(MessageInfo messageInfo) {
         ReplayInfo replayInfo = new ReplayInfo(messageInfo);
         if (messageInfo.getUserAdmin().equals(MemberPermission.MEMBER)) {
@@ -130,8 +133,11 @@ public class AdminService {
             if(this.enableMapper.canUseGroup(messageInfo.getGroupId(),0)==1){
                 this.enableMapper.closeGroup(messageInfo.getGroupId(), 1);
                 replayInfo.setReplayMessage("开启成功");
-            }else {
+            }else if(this.enableMapper.canUseGroup(messageInfo.getGroupId(),1)==1){
                 replayInfo.setReplayMessage("请不要重复开启");
+            }else {
+                this.enableMapper.closeGroup(messageInfo.getGroupId(), 1);
+                replayInfo.setReplayMessage("开启成功");
             }
         }
         return replayInfo;
@@ -146,8 +152,11 @@ public class AdminService {
             if(this.enableMapper.canUseBilibili(messageInfo.getGroupId(),1)==1){
                 this.enableMapper.closeBilibili(messageInfo.getGroupId(), 0);
                 replayInfo.setReplayMessage("关闭成功");
-            }else {
+            }else if(this.enableMapper.canUseBilibili(messageInfo.getGroupId(),0)==1){
                 replayInfo.setReplayMessage("请不要重复关闭");
+            }else {
+                this.enableMapper.closeBilibili(messageInfo.getGroupId(), 0);
+                replayInfo.setReplayMessage("关闭成功");
             }
         }
         return replayInfo;
@@ -160,11 +169,14 @@ public class AdminService {
             replayInfo.setReplayMessage("仅本群群主及管理员有权限对功能进行操作");
             return replayInfo;
         } else {
-            if(this.enableMapper.canUseBilibili(messageInfo.getGroupId(),1)==0){
+            if(this.enableMapper.canUseBilibili(messageInfo.getGroupId(),0)==1){
                 this.enableMapper.closeBilibili(messageInfo.getGroupId(), 1);
                 replayInfo.setReplayMessage("开启成功");
-            }else {
+            }else if (this.enableMapper.canUseBilibili(messageInfo.getGroupId(),0)==1){
                 replayInfo.setReplayMessage("请不要重复开启");
+            }else {
+                this.enableMapper.closeBilibili(messageInfo.getGroupId(), 1);
+                replayInfo.setReplayMessage("开启成功");
             }
         }return replayInfo;
     }

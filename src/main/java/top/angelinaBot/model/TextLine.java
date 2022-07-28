@@ -138,7 +138,7 @@ public class TextLine {
             height++;
             text.add(line);
         }
-        BufferedImage image = new BufferedImage((width + 4) * size, (width + 3) * size, BufferedImage.TYPE_INT_RGB);
+        BufferedImage image = new BufferedImage((width + 4) * size, (height + 3) * size, BufferedImage.TYPE_INT_RGB);
         Graphics graphics = image.getGraphics();
         Color wordColor;//字体颜色
         Font wordFont;//字体格式
@@ -149,7 +149,7 @@ public class TextLine {
             int setHeight = (height + 2) * size;
             if(setHeight<0.6*setWidth){
                 graphics.setColor(new Color(222,149,204));
-                graphics.fillRect(0, 0, (width + 4) * size, (width + 3) * size);
+                graphics.fillRect(0, 0, (width + 4) * size, (height + 3) * size);
                 try {
                     InputStream pic = new ClassPathResource("/pic/new.jpg").getInputStream();
                     Image img = ImageIO.read(pic).getScaledInstance(setWidth, (int)(setWidth*0.56), Image.SCALE_DEFAULT);
@@ -164,7 +164,7 @@ public class TextLine {
             }
             else if(setHeight<1.6*setWidth){
                 graphics.setColor(new Color(225, 200, 205));
-                graphics.fillRect(0, 0, (width + 4) * size, (width + 3) * size);
+                graphics.fillRect(0, 0, (width + 4) * size, (height + 3) * size);
                 try {
                     InputStream pic = new ClassPathResource("/pic/new2.jpg").getInputStream();
                     Image img = ImageIO.read(pic).getScaledInstance(setWidth, (setWidth/10)*16, Image.SCALE_DEFAULT);

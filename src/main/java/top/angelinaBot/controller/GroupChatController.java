@@ -73,7 +73,9 @@ public class GroupChatController {
                         replayInfo.setReplayMessage("开启成功");
                     }else {
                         replayInfo.setReplayMessage("请不要重复开启");
-                    }sendMessageUtil.sendGroupMsg(replayInfo);
+                    }
+                    sendMessageUtil.sendGroupMsg(replayInfo);
+                    return JsonResult.success(replayInfo);
                 }
             }
         }
@@ -148,6 +150,7 @@ public class GroupChatController {
                         replayInfo.setReplayMessage("有群友发送了一条哔哩哔哩分享\n分享名为："+desc+"\n链接为："+qqdocurl);
                         sendMessageUtil.sendGroupMsg(replayInfo);
                     }
+                    return JsonResult.success(replayInfo);
                 }
             }
         }
