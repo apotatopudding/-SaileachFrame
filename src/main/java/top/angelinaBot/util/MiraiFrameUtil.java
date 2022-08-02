@@ -7,6 +7,7 @@ import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.events.*;
+import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.utils.BotConfiguration;
 import net.mamoe.mirai.utils.DeviceInfo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -265,6 +266,7 @@ public class MiraiFrameUtil {
             activityMapper.getFriendMessage();
             try {
                 groupTempChatController.receive(messageInfo);
+                AngelinaEventSource.getInstance().handle2(messageInfo);
             } catch (InvocationTargetException | IllegalAccessException e) {
                 e.printStackTrace();
             }

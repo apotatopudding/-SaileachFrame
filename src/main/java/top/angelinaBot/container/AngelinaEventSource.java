@@ -5,10 +5,11 @@ import top.angelinaBot.model.AngelinaMessageEvent;
 import top.angelinaBot.model.MessageInfo;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 @Slf4j
-public class AngelinaEventSource {
+public class AngelinaEventSource<a> {
 
 
     private static volatile AngelinaEventSource instance;
@@ -49,7 +50,8 @@ public class AngelinaEventSource {
     }
 
     public void handle(MessageInfo message) {
-        for (AngelinaListener l: listenerSet.keySet()) {
+        for (Iterator<AngelinaListener> it = listenerSet.keySet().iterator(); it.hasNext();){
+            AngelinaListener l = it.next();
             AngelinaMessageEvent event = listenerSet.get(l);
             Integer time = l.getSecond();
             if ((System.currentTimeMillis() - l.timestamp) / 1000 > time) {
@@ -57,14 +59,71 @@ public class AngelinaEventSource {
                     log.warn("线程超时");
                     event.getLock().notify();
                 }
-                listenerSet.remove(l);
+                it.remove();
             } else if (l.callback(message)) {
                 synchronized (event.getLock()) {
                     log.info("唤起线程");
                     event.setMessageInfo(message);
                     event.getLock().notify();
                 }
-                listenerSet.remove(l);
+                it.remove();
+            }
+        }
+    }
+
+    //专为临时会话的listener
+    public Map<AngelinaListener, AngelinaMessageEvent> listenerSet2 = new HashMap<>();
+
+    public static AngelinaMessageEvent waiter2(AngelinaListener listener) {
+        AngelinaMessageEvent o = new AngelinaMessageEvent();
+        AngelinaEventSource.getInstance().registerEventListener2(listener, o);
+        synchronized (o.getLock()) {
+            log.info("线程等待");
+            try {
+                o.getLock().wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return o;
+    }
+
+
+
+    public void registerEventListener2(AngelinaListener listener, AngelinaMessageEvent o) {
+        if (listener != null) {
+            listenerSet2.put(listener, o);
+            //由于临时会话数量较少，直接开辟子线程进行延时控制，还存在就删掉listener
+            new Thread(() ->{
+                try {
+                    Integer time = listener.getSecond();
+                    Thread.sleep(time*1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if(listenerSet2.containsKey(listener)) {
+                    synchronized (o.getLock()) {
+                        log.warn("线程超时");
+                        o.getLock().notify();
+                    }
+                    listenerSet2.remove(listener);
+                }
+            }).start();
+        }
+    }
+
+    public void handle2(MessageInfo message) {
+        for(Iterator<AngelinaListener> it = listenerSet2.keySet().iterator(); it.hasNext();){
+            AngelinaListener l = it.next();
+            AngelinaMessageEvent event = listenerSet2.get(l);
+            Integer time = l.getSecond();
+            if ((System.currentTimeMillis() - l.timestamp) / 1000 < time) {
+                synchronized (event.getLock()) {
+                    log.info("唤起线程");
+                    event.setMessageInfo(message);
+                    event.getLock().notify();
+                }
+                it.remove();
             }
         }
     }

@@ -7,10 +7,7 @@ import net.mamoe.mirai.event.events.GroupTempMessageEvent;
 import net.mamoe.mirai.event.events.StrangerMessageEvent;
 import net.mamoe.mirai.internal.message.OnlineFriendImage;
 import net.mamoe.mirai.internal.message.OnlineGroupImage;
-import net.mamoe.mirai.message.data.At;
-import net.mamoe.mirai.message.data.ImageType;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.PlainText;
+import net.mamoe.mirai.message.data.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,15 +51,17 @@ public class MessageInfo {
     private Boolean isReplay = true;
     //用户权限
     private MemberPermission userAdmin;
+    //获取机器人权限
+    private MemberPermission botPermission;
     //获取json项目
     private String JSONObjectCTS;
     //获取json数组
     private String JSONObjectCTMC;
+    //获取bot名字
+    private String botName;
 
     public MessageInfo() {
-
     }
-
 
     /**
      * 根据Mirai的事件构建Message，方便后续调用
@@ -77,12 +76,15 @@ public class MessageInfo {
         this.groupId = event.getSubject().getId();
         this.time = event.getTime();
         this.userAdmin = event.getSender().getPermission();
+        this.botPermission = event.getGroup().getBotPermission();
+
 
         //获取消息体
         MessageChain chain = event.getMessage();
         this.eventString = chain.toString();
         this.JSONObjectCTS = chain.contentToString();
         this.JSONObjectCTMC = chain.serializeToMiraiCode();
+
 
         for (Object o: chain){
             if (o instanceof At) {
@@ -102,6 +104,7 @@ public class MessageInfo {
                     for (String name: botNames){
                         if (orders[0].startsWith(name)){
                             this.isCallMe = true;
+                            this.botName = name;
                             this.keyword = this.keyword.replace(name, "");
                             break;
                         }
@@ -371,4 +374,13 @@ public class MessageInfo {
     public String getJSONObjectCTMC() { return JSONObjectCTMC; }
 
     public void setJSONObjectCTMC(String JSONObjectCTMC) { this.JSONObjectCTMC = JSONObjectCTMC; }
+
+    public String getBotName() { return botName; }
+
+    public void setBotName(String botName) { this.botName = botName; }
+
+    public MemberPermission getBotPermission() { return botPermission; }
+
+    public void setBotPermission(MemberPermission botPermission) { this.botPermission = botPermission; }
+
 }

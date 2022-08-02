@@ -28,5 +28,8 @@ public abstract class AngelinaListener {
 
     public Integer getSecond() { return second; }
 
-    public void setSecond(Integer second) { this.second = second; }
+    public void setSecond(Integer second) {
+        if(second>0) this.second = second;
+        else this.second = 60;
+    }
 }

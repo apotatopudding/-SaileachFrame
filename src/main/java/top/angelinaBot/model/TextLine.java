@@ -7,7 +7,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 
 /**
@@ -42,7 +42,7 @@ public class TextLine {
     }
 
     /**
-     * 为内容增加一个图片，图片可以超出最长字符限制
+     * 为内容增加一个小型图标，图片可以超出最长字符限制
      *
      * @param image 图片
      */
@@ -51,6 +51,26 @@ public class TextLine {
         addSpace();
         line.add(image);
         addSpace();
+    }
+
+    /**
+     * 为内容增加一个自定义图片，图片可以超出最长字符限制
+     *
+     * @param image 图片
+     */
+    public void addImage(Image image,int x, int y,int widthOfSize,int heightOfSize) {
+        int a = pointers;
+        pointers = 0;
+        ImageInfo imageInfo =new ImageInfo();
+        imageInfo.setImage(image);
+        imageInfo.setX(x);
+        imageInfo.setY(y);
+        imageInfo.setWidthOfSize(widthOfSize);
+        imageInfo.setHeightOfSize(heightOfSize);
+        pointers += widthOfSize;
+        line.add(imageInfo);
+        pointers = a;
+
     }
 
     /**
@@ -143,17 +163,19 @@ public class TextLine {
         Color wordColor;//字体颜色
         Font wordFont;//字体格式
         Color bottomColor;//阴影底色
+        Color pink =new Color(245,181,182);//调色粉色
+        Color skin = new Color(249,243,227);//调色肉色
         boolean shadowSwitch = false;//是否开启阴影
         if (use){
             int setWidth = (width + 2) * size;
             int setHeight = (height + 2) * size;
             if(setHeight<0.6*setWidth){
-                graphics.setColor(new Color(222,149,204));
+                graphics.setColor(pink);
                 graphics.fillRect(0, 0, (width + 4) * size, (height + 3) * size);
                 try {
                     InputStream pic = new ClassPathResource("/pic/new.jpg").getInputStream();
                     Image img = ImageIO.read(pic).getScaledInstance(setWidth, (int)(setWidth*0.56), Image.SCALE_DEFAULT);
-                    graphics.drawImage(img, size, size, setWidth, (setWidth/10)*6, null);
+                    graphics.drawImage(img, size, size, setWidth, (int)(setWidth*0.56), null);
                 }catch (IOException e){
                     e.printStackTrace();
                 }
@@ -163,7 +185,7 @@ public class TextLine {
                 wordFont = new Font("新宋体", Font.BOLD, size);
             }
             else if(setHeight<1.6*setWidth){
-                graphics.setColor(new Color(225, 200, 205));
+                graphics.setColor(pink);
                 graphics.fillRect(0, 0, (width + 4) * size, (height + 3) * size);
                 try {
                     InputStream pic = new ClassPathResource("/pic/new2.jpg").getInputStream();
@@ -172,9 +194,9 @@ public class TextLine {
                 }catch (IOException e) {
                     e.printStackTrace();
                 }
-                wordColor = Color.PINK;
+                wordColor = skin;
                 shadowSwitch = true;
-                bottomColor =Color.black;
+                bottomColor =Color.DARK_GRAY;
                 wordFont = new Font("新宋体", Font.BOLD, size);
             }else {
                 graphics.setColor(new Color(182, 203, 253));
@@ -206,7 +228,7 @@ public class TextLine {
                     graphics.setFont(wordFont);//格式
                     if(shadowSwitch){
                         graphics.setColor(bottomColor);//底色
-                        graphics.drawString(str, x+2,y-2 + size);
+                        graphics.drawString(str, x+4,y+4 + size);
                     }
                     graphics.setColor(wordColor);//字色
                     graphics.drawString(str, x,y + size);
@@ -217,7 +239,7 @@ public class TextLine {
                     graphics.setFont(wordFont);//格式
                     if(shadowSwitch) {
                         graphics.setColor(bottomColor);//底色
-                        graphics.drawString(str, ((width + 4 - str.length()) / 2 * size) + 2, y + size - 2);
+                        graphics.drawString(str, ((width + 4 - str.length()) / 2 * size) + 4, y + size + 4);
                     }
                     graphics.setColor(wordColor);//字色
                     graphics.drawString(str, (width + 4 - str.length()) / 2 * size, y + size);
@@ -225,10 +247,17 @@ public class TextLine {
                 }
                 if (obj instanceof BufferedImage) {
                     BufferedImage bf = (BufferedImage) obj;
-                    graphics.setColor(wordColor);
-                    graphics.setFont(wordFont);
                     graphics.drawImage(bf, x, y, size, size, null);
                     x += size;
+                }
+                if (obj instanceof ImageInfo){
+                    Image img = ((ImageInfo) obj).getImage();
+                    int imgX = ((ImageInfo) obj).getX();
+                    int imgY = ((ImageInfo) obj).getY();
+                    int imgWidth = ((ImageInfo) obj).getWidthOfSize();
+                    int imgHeight = ((ImageInfo) obj).getHeightOfSize();
+                    graphics.drawImage(img,imgX,imgY,imgWidth * size,imgHeight * size,null);
+                    x += imgWidth * size;
                 }
                 if (obj instanceof Integer) {
                     x += (int) obj * size;

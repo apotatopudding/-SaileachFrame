@@ -2,6 +2,8 @@ package top.angelinaBot.model;
 
 import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.Bot;
+import net.mamoe.mirai.event.events.GroupMessageEvent;
+import net.mamoe.mirai.message.data.Dice;
 import net.mamoe.mirai.message.data.Image;
 import net.mamoe.mirai.utils.ExternalResource;
 
@@ -46,12 +48,17 @@ public class ReplayInfo {
     Long nudged;
     //查询机器人权限
     Boolean permission = false;
+    //发送一个随机骰子消息
+    Dice dice;
+    //撤回时间（目前仅设置给带图消息）
+    Integer recallTime;
 
     public ReplayInfo(MessageInfo messageInfo) {
         this.loginQQ = messageInfo.getLoginQq();
         this.groupId = messageInfo.getGroupId();
         this.qq = messageInfo.getQq();
         this.name = messageInfo.getName();
+
     }
 
     public ReplayInfo() {
@@ -129,6 +136,14 @@ public class ReplayInfo {
     public Boolean getPermission() { return permission; }
 
     public void setPermission(Boolean permission) { this.permission = permission; }
+
+    public Dice getDice() { return dice; }
+
+    public void setDice(Dice dice) { this.dice = dice; }
+
+    public Integer getRecallTime() { return recallTime; }
+
+    public void setRecallTime(Integer recallTime) { this.recallTime = recallTime; }
 
     /**
      * 获取ReplayInfo的图片集合

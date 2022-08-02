@@ -66,7 +66,7 @@ public class GroupChatController {
         //如果群组关闭，则拒绝接收消息,即将发送者改为接收者，使程序识别为自己发送的自己消息
         if (!message.getUserAdmin().equals(MemberPermission.MEMBER)) {
             if (message.getText()!=null){
-                if(message.getText().equals("群组开启")){
+                if(message.getText().equals(message.getBotName()+"群组开启")){
                     ReplayInfo replayInfo = new ReplayInfo(message);
                     if(this.enableMapper.canUseGroup(message.getGroupId(),0)==1){
                         this.enableMapper.closeGroup(message.getGroupId(), 1);

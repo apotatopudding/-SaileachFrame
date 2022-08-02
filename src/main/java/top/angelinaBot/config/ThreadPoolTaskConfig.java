@@ -20,8 +20,8 @@ public class ThreadPoolTaskConfig {
     @Bean("taskModuleExecutor")
     public Executor taskModuleExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(4);
-        executor.setMaxPoolSize(10);
+        executor.setCorePoolSize(6);
+        executor.setMaxPoolSize(20);
         executor.setKeepAliveSeconds(300);
         executor.setQueueCapacity(Integer.MAX_VALUE);
         executor.setThreadNamePrefix("Angelina");
