@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 @Slf4j
-public class AngelinaEventSource<a> {
+public class AngelinaEventSource {
 
 
     private static volatile AngelinaEventSource instance;
