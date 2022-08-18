@@ -23,6 +23,14 @@ public interface EnableMapper {
             " group_id = #{groupId}, bilibili_close = #{bilibiliClose};"})
     Integer closeBilibili(@Param("groupId") Long groupId, @Param("bilibiliClose") Integer bilibiliClose);
 
+    //开关Bilibili解析，默认关闭
+    @Insert({"insert into a_group_close (group_id, dhash_close)\n" +
+            " VALUES (#{groupId}, #{dHashClose})\n" +
+            " ON CONFLICT(group_id)\n" +
+            " DO update set\n" +
+            " group_id = #{groupId}, dhash_close = #{dHashClose};"})
+    Integer closeDHash(@Param("groupId") Long groupId, @Param("dHashClose") Integer dHashClose);
+
 
     //查询群组聊天关闭情况
     @Select({"select count(group_id) from a_group_close where group_id=#{groupId} and group_close=#{groupClose};"})
@@ -31,5 +39,9 @@ public interface EnableMapper {
     //查询Bilibili解析关闭情况
     @Select({"select count(group_id) from a_group_close where group_id=#{groupId} and bilibili_close=#{bilibiliClose};"})
     Integer canUseBilibili(@Param("groupId") Long groupId, @Param("bilibiliClose") Integer bilibiliClose);
+
+    //查询群组聊天关闭情况
+    @Select({"select count(group_id) from a_group_close where group_id=#{groupId} and dhash_close=#{dHashClose};"})
+    Integer canUseDHash(@Param("groupId") Long groupId, @Param("dHashClose") Integer dHashClose);
 
 }

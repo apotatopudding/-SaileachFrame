@@ -52,13 +52,14 @@ public class ReplayInfo {
     Dice dice;
     //撤回时间（目前仅设置给带图消息）
     Integer recallTime;
+    //退群延时
+    Integer quitTime;
 
     public ReplayInfo(MessageInfo messageInfo) {
         this.loginQQ = messageInfo.getLoginQq();
         this.groupId = messageInfo.getGroupId();
         this.qq = messageInfo.getQq();
         this.name = messageInfo.getName();
-
     }
 
     public ReplayInfo() {
@@ -144,6 +145,10 @@ public class ReplayInfo {
     public Integer getRecallTime() { return recallTime; }
 
     public void setRecallTime(Integer recallTime) { this.recallTime = recallTime; }
+
+    public Integer getQuitTime() { return quitTime; }
+
+    public void setQuitTime(Integer quitTime) { this.quitTime = quitTime; }
 
     /**
      * 获取ReplayInfo的图片集合

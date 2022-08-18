@@ -1,14 +1,15 @@
 package top.angelinaBot.model;
 
+import net.mamoe.mirai.contact.ContactList;
 import net.mamoe.mirai.contact.MemberPermission;
-import net.mamoe.mirai.event.events.FriendMessageEvent;
-import net.mamoe.mirai.event.events.GroupMessageEvent;
-import net.mamoe.mirai.event.events.GroupTempMessageEvent;
-import net.mamoe.mirai.event.events.StrangerMessageEvent;
+import net.mamoe.mirai.contact.NormalMember;
+import net.mamoe.mirai.event.GlobalEventChannel;
+import net.mamoe.mirai.event.events.*;
 import net.mamoe.mirai.internal.message.OnlineFriendImage;
 import net.mamoe.mirai.internal.message.OnlineGroupImage;
 import net.mamoe.mirai.message.data.*;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,6 +34,12 @@ public class MessageInfo {
     private String name;
     //群号
     private Long groupId;
+    //群名
+    private String groupName;
+    //群主
+    private String groupOwnerName;
+    //群列表（速度较慢）
+    private ContactList<NormalMember> memberList;
     //图片url集合
     private List<String> imgUrlList = new ArrayList<>();
     //图片类型集合
@@ -59,6 +66,8 @@ public class MessageInfo {
     private String JSONObjectCTMC;
     //获取bot名字
     private String botName;
+    //消息链本体
+    private MessageChain chain;
 
     public MessageInfo() {
     }
@@ -74,16 +83,17 @@ public class MessageInfo {
         this.qq = event.getSender().getId();
         this.name = event.getSenderName();
         this.groupId = event.getSubject().getId();
+        this.groupName = event.getSubject().getName();
+        this.groupOwnerName = event.getSubject().getOwner().getNameCard();
         this.time = event.getTime();
         this.userAdmin = event.getSender().getPermission();
         this.botPermission = event.getGroup().getBotPermission();
 
-
         //获取消息体
-        MessageChain chain = event.getMessage();
-        this.eventString = chain.toString();
-        this.JSONObjectCTS = chain.contentToString();
-        this.JSONObjectCTMC = chain.serializeToMiraiCode();
+        this.chain = event.getMessage();
+        this.eventString = this.chain.toString();
+        this.JSONObjectCTS = this.chain.contentToString();
+        this.JSONObjectCTMC = this.chain.serializeToMiraiCode();
 
 
         for (Object o: chain){
@@ -226,10 +236,20 @@ public class MessageInfo {
                         }
                     }
                 }
-            }
+            } else if (o instanceof OnlineFriendImage){ // 编译器有可能因为无法识别Kotlin的class而报红，问题不大能通过编译
+            //消息图片内容
+            this.imgUrlList.add(((OnlineFriendImage) o).getOriginUrl());
+            this.imgTypeList.add(((OnlineFriendImage) o).getImageType());
+        }
         }
     }
 
+    public MessageInfo(BotJoinGroupEvent event){
+        this.loginQq = event.getBot().getId();
+        this.groupId = event.getGroup().getId();
+        this.event = EventEnum.BotJoinGroupEvent;
+        this.memberList = event.getGroup().getMembers();
+    }
 
     public boolean isReplay() {
         return isReplay;
@@ -315,6 +335,18 @@ public class MessageInfo {
         return groupId;
     }
 
+    public String getGroupName() { return groupName; }
+
+    public void setGroupName(String groupName) { this.groupName = groupName; }
+
+    public String getGroupOwnerName() { return groupOwnerName; }
+
+    public void setGroupOwnerName(String groupOwnerName) { this.groupOwnerName = groupOwnerName; }
+
+    public ContactList<NormalMember> getMemberList() { return memberList; }
+
+    public void setMemberList(ContactList<NormalMember> memberList) { this.memberList = memberList; }
+
     public void setGroupId(Long groupId) {
         this.groupId = groupId;
     }
@@ -383,4 +415,7 @@ public class MessageInfo {
 
     public void setBotPermission(MemberPermission botPermission) { this.botPermission = botPermission; }
 
+    public MessageChain getChain() { return chain; }
+
+    public void setChain(MessageChain chain) { this.chain = chain; }
 }

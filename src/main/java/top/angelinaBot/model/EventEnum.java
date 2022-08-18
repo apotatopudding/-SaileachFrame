@@ -7,6 +7,7 @@ public enum EventEnum {
     GroupRecall("群撤回消息"),
     NudgeEvent("戳一戳"),
     MemberJoinEvent("有新成员入群"),
+    BotJoinGroupEvent("机器人加入群"),
     MemberLeaveEvent("有成员退群");
 
     private final String eventName;

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.mamoe.mirai.contact.MemberPermission;
 import net.mamoe.mirai.message.data.ImageType;
+import net.mamoe.mirai.message.data.MessageSource;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,15 +86,19 @@ public class GroupChatController {
         //不处理自身发送的消息
         if (!message.getLoginQq().equals(message.getQq())) {
             log.info("接受到群消息:{}", message.getEventString());
-            List<String> mutedWordList = bannedMapper.getMuted();
-            //包含恶劣禁言词汇直接禁言停止其他消息调取
-            if(mutedWordList != null&&message.getText()!=null){
-                for(String mutedWord:mutedWordList){
-                    if (message.getText().contains(mutedWord)){
-                        ReplayInfo replayInfo = new ReplayInfo(message);
-                        replayInfo.setMuted(30 * 60);
-                        sendMessageUtil.sendGroupMsg(replayInfo);
-                        return JsonResult.success(replayInfo);
+            //权限高于对方时才进行检索
+            if(message.getBotPermission().getLevel()>message.getUserAdmin().getLevel()){
+                //包含恶劣禁言词汇直接禁言停止其他消息调取
+                List<String> mutedWordList = bannedMapper.getMuted();
+                if (mutedWordList != null && message.getText() != null) {
+                    for (String mutedWord : mutedWordList) {
+                        if (message.getText().contains(mutedWord)) {
+                            ReplayInfo replayInfo = new ReplayInfo(message);
+                            replayInfo.setMuted(30 * 60);
+                            sendMessageUtil.sendGroupMsg(replayInfo);
+                            MessageSource.recall(message.getChain());//撤回这条消息
+                            return JsonResult.success(replayInfo);
+                        }
                     }
                 }
             }
@@ -121,7 +126,9 @@ public class GroupChatController {
                         }
                     }
                 }
-            } else if (message.getKeyword() == null && message.getImgUrlList().size() == 1 && message.getImgTypeList().get(0) != ImageType.GIF) {
+            } else if (message.getKeyword() == null &&
+                    message.getImgUrlList().size() == 1 && message.getImgTypeList().get(0) != ImageType.GIF &&
+                    this.enableMapper.canUseDHash(message.getGroupId(), 0) == 0) {
                 //没有文字且只有一张非gif图片的时候，准备DHash运算
                 String dHash = DHashUtil.getDHash(message.getImgUrlList().get(0));
                 for (String s : AngelinaContainer.dHashMap.keySet()) {
@@ -136,20 +143,18 @@ public class GroupChatController {
                         return JsonResult.success(invoke);
                     }
                 }
-            }else if(message.getJSONObjectCTMC().startsWith("[mirai:app")){
+            }else if(message.getJSONObjectCTMC().startsWith("[mirai:app") && this.enableMapper.canUseBilibili(message.getGroupId(), 1) == 1){
                 ReplayInfo replayInfo = new ReplayInfo(message);
                 JSONObject jSONObject = new JSONObject(message.getJSONObjectCTS());
                 String prompt = jSONObject.getString("prompt").trim();
                 if(prompt.equals("[QQ小程序]哔哩哔哩")){
                     //只有开启了解析才使用
-                    if (this.enableMapper.canUseBilibili(message.getGroupId(), 1) == 1){
-                        JSONObject meta = jSONObject.getJSONObject("meta");
-                        JSONObject detail_1 = meta.getJSONObject("detail_1");
-                        String desc = detail_1.getString("desc");
-                        String qqdocurl =StringUtils.substringBefore(detail_1.getString("qqdocurl"),"?");
-                        replayInfo.setReplayMessage("有群友发送了一条哔哩哔哩分享\n分享名为："+desc+"\n链接为："+qqdocurl);
-                        sendMessageUtil.sendGroupMsg(replayInfo);
-                    }
+                    JSONObject meta = jSONObject.getJSONObject("meta");
+                    JSONObject detail_1 = meta.getJSONObject("detail_1");
+                    String desc = detail_1.getString("desc");
+                    String qqdocurl =StringUtils.substringBefore(detail_1.getString("qqdocurl"),"?");
+                    replayInfo.setReplayMessage("有群友发送了一条哔哩哔哩分享\n分享名为："+desc+"\n链接为："+qqdocurl);
+                    sendMessageUtil.sendGroupMsg(replayInfo);
                     return JsonResult.success(replayInfo);
                 }
             }

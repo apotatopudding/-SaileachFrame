@@ -11,6 +11,7 @@ import top.angelinaBot.dao.EnableMapper;
 import top.angelinaBot.model.EventEnum;
 import top.angelinaBot.model.MessageInfo;
 import top.angelinaBot.model.ReplayInfo;
+import top.angelinaBot.util.SendMessageUtil;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -24,6 +25,9 @@ public class AdminService {
 
     @Autowired
     private EnableMapper enableMapper;
+
+    @Autowired
+    private SendMessageUtil sendMessageUtil;
 
     @AngelinaGroup(keyWords = {"关闭"}, description = "关闭洁哥的某个功能")
     public ReplayInfo closeFunc(MessageInfo messageInfo) {
@@ -111,15 +115,10 @@ public class AdminService {
         if (messageInfo.getUserAdmin().equals(MemberPermission.MEMBER)) {
             replayInfo.setReplayMessage("仅本群群主及管理员有权限对功能进行操作");
         } else {
-            if(this.enableMapper.canUseGroup(messageInfo.getGroupId(),1)==1){
-                this.enableMapper.closeGroup(messageInfo.getGroupId(), 0);
-                replayInfo.setReplayMessage("关闭成功");
-            }else if(this.enableMapper.canUseGroup(messageInfo.getGroupId(),0)==1){
-                replayInfo.setReplayMessage("请不要重复关闭");
-            }else {
-                this.enableMapper.closeGroup(messageInfo.getGroupId(), 0);
-                replayInfo.setReplayMessage("关闭成功");
-            }
+            replayInfo.setReplayMessage("关闭成功");
+            sendMessageUtil.sendGroupMsg(replayInfo);
+            replayInfo.setReplayMessage(null);
+            this.enableMapper.closeGroup(messageInfo.getGroupId(), 0);
         }
         return replayInfo;
     }
@@ -149,15 +148,13 @@ public class AdminService {
         if (messageInfo.getUserAdmin().equals(MemberPermission.MEMBER)) {
             replayInfo.setReplayMessage("仅本群群主及管理员有权限对功能进行操作");
         } else {
-            if(this.enableMapper.canUseBilibili(messageInfo.getGroupId(),1)==1){
-                this.enableMapper.closeBilibili(messageInfo.getGroupId(), 0);
-                replayInfo.setReplayMessage("关闭成功");
-            }else if(this.enableMapper.canUseBilibili(messageInfo.getGroupId(),0)==1){
-                replayInfo.setReplayMessage("请不要重复关闭");
-            }else {
-                this.enableMapper.closeBilibili(messageInfo.getGroupId(), 0);
-                replayInfo.setReplayMessage("关闭成功");
-            }
+            if(this.enableMapper.canUseBilibili(messageInfo.getGroupId(),0)==0){
+                if(this.enableMapper.canUseBilibili(messageInfo.getGroupId(),1)==0) replayInfo.setReplayMessage("请不要重复关闭");
+                else {
+                    this.enableMapper.closeBilibili(messageInfo.getGroupId(), 0);
+                    replayInfo.setReplayMessage("关闭成功");
+                }
+            }else replayInfo.setReplayMessage("请不要重复关闭");
         }
         return replayInfo;
     }
@@ -169,15 +166,42 @@ public class AdminService {
             replayInfo.setReplayMessage("仅本群群主及管理员有权限对功能进行操作");
             return replayInfo;
         } else {
-            if(this.enableMapper.canUseBilibili(messageInfo.getGroupId(),0)==1){
+            if(this.enableMapper.canUseBilibili(messageInfo.getGroupId(),1)==0){
                 this.enableMapper.closeBilibili(messageInfo.getGroupId(), 1);
                 replayInfo.setReplayMessage("开启成功");
-            }else if (this.enableMapper.canUseBilibili(messageInfo.getGroupId(),0)==1){
-                replayInfo.setReplayMessage("请不要重复开启");
-            }else {
-                this.enableMapper.closeBilibili(messageInfo.getGroupId(), 1);
-                replayInfo.setReplayMessage("开启成功");
-            }
+            }else replayInfo.setReplayMessage("请不要重复开启");
         }return replayInfo;
     }
+
+    @AngelinaGroup(keyWords = {"关闭截图解析"},description = "关闭公招截图自动识别（默认是开启的）")
+    public ReplayInfo closeDHash(MessageInfo messageInfo) {
+        ReplayInfo replayInfo = new ReplayInfo(messageInfo);
+        if (messageInfo.getUserAdmin().equals(MemberPermission.MEMBER)) {
+            replayInfo.setReplayMessage("仅本群群主及管理员有权限对功能进行操作");
+        } else {
+            if(this.enableMapper.canUseDHash(messageInfo.getGroupId(),0)==0){
+                this.enableMapper.closeDHash(messageInfo.getGroupId(), 0);
+                replayInfo.setReplayMessage("关闭成功");
+            }else replayInfo.setReplayMessage("请不要重复关闭");
+        }
+        return replayInfo;
+    }
+
+    @AngelinaGroup(keyWords = {"开启截图解析"},description = "开启公招截图自动识别（默认是开启的）")
+    public ReplayInfo openDHash(MessageInfo messageInfo) {
+        ReplayInfo replayInfo = new ReplayInfo(messageInfo);
+        if (messageInfo.getUserAdmin().equals(MemberPermission.MEMBER)) {
+            replayInfo.setReplayMessage("仅本群群主及管理员有权限对功能进行操作");
+            return replayInfo;
+        } else {
+            if(this.enableMapper.canUseDHash(messageInfo.getGroupId(),1)==0){
+                if (this.enableMapper.canUseDHash(messageInfo.getGroupId(),0)==0) replayInfo.setReplayMessage("请不要重复开启");
+                else {
+                    this.enableMapper.closeDHash(messageInfo.getGroupId(), 1);
+                    replayInfo.setReplayMessage("开启成功");
+                }
+            }else replayInfo.setReplayMessage("请不要重复开启");
+        }return replayInfo;
+    }
+
 }

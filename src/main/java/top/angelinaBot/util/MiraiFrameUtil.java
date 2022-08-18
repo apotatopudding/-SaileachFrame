@@ -137,10 +137,7 @@ public class MiraiFrameUtil {
         GlobalEventChannel.INSTANCE.subscribeAlways(BotJoinGroupEvent.class, event -> {
             messageIdMap.put(event.getGroupId(), event.getBot().getId());
             activityMapper.getEventMessage();
-            MessageInfo messageInfo = new MessageInfo();
-            messageInfo.setEvent(EventEnum.MemberJoinEvent);
-            messageInfo.setLoginQq(event.getBot().getId());
-            messageInfo.setGroupId(event.getGroup().getId());
+            MessageInfo messageInfo = new MessageInfo(event);
             try {
                 eventsController.receive(messageInfo);
             } catch (InvocationTargetException | IllegalAccessException e) {
@@ -213,6 +210,8 @@ public class MiraiFrameUtil {
                 messageInfo.setGroupId(event.getGroup().getId());
                 messageInfo.setQq(event.getMember().getId());
                 messageInfo.setName(event.getMember().getNick());
+                messageInfo.setGroupName(event.getGroup().getName());
+                messageInfo.setGroupOwnerName(event.getGroup().getOwner().getNick());
                 try {
                     eventsController.receive(messageInfo);
                 } catch (InvocationTargetException | IllegalAccessException e) {
@@ -226,7 +225,7 @@ public class MiraiFrameUtil {
             reBuildBotGroupMap();
         });
 
-        //账号掉线
+        //账号被禁言
         GlobalEventChannel.INSTANCE.subscribeAlways(BotMuteEvent.class, event -> {
             if (event.component1() > 60 * 60 * 24) {
                 event.getGroup().quit();
@@ -237,6 +236,9 @@ public class MiraiFrameUtil {
         GlobalEventChannel.INSTANCE.subscribeAlways(BotOnlineEvent.class, event -> {
             reBuildBotGroupMap();
         });
+
+        //收到加群邀请自动忽略
+        GlobalEventChannel.INSTANCE.subscribeAlways(BotInvitedJoinGroupRequestEvent.class, BotInvitedJoinGroupRequestEvent::ignore);
 
         //好友消息
         GlobalEventChannel.INSTANCE.subscribeAlways(FriendMessageEvent.class, event -> {
@@ -292,4 +294,18 @@ public class MiraiFrameUtil {
             log.warn("is on rebuilding group-bot");
         }
     }
+
+    /**
+     * 单独分离一个方法用于制造最新请求到的群组列表
+     */
+    public Map<Long,Long> BotGroupMap() {
+        Map<Long,Long> groupMap = new HashMap<>();
+        for (Bot bot : Bot.getInstances()) {
+            for (Group group : bot.getGroups()) {
+                groupMap.put(group.getId(), bot.getId());
+            }
+        }
+        return groupMap;
+    }
+
 }

@@ -1,10 +1,12 @@
 package top.angelinaBot.util.impl;
 
+import kotlin.coroutines.Continuation;
 import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.message.data.*;
+import net.mamoe.mirai.spi.AudioToSilkService;
 import net.mamoe.mirai.utils.ExternalResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -42,7 +44,7 @@ public class MiraiMessageUtilImpl implements SendMessageUtil {
             Group group = bot.getGroupOrFail(replayInfo.getGroupId());
             //如果对象是关闭群对象，清空所有消息
             if (this.enableMapper.canUseGroup(replayInfo.getGroupId(), 0) == 1){
-                replayInfo=new ReplayInfo();
+                replayInfo = new ReplayInfo();
             }
             //解析replayInfo
             String replayMessage = replayInfo.getReplayMessage();
@@ -56,6 +58,7 @@ public class MiraiMessageUtilImpl implements SendMessageUtil {
             Boolean permission = replayInfo.getPermission();
             Dice dice = replayInfo.getDice();
             Integer recallTime = replayInfo.getRecallTime();
+            Integer quitTime = replayInfo.getQuitTime();
 
 
             MessageChainBuilder messageChainBuilder = new MessageChainBuilder();
@@ -133,6 +136,12 @@ public class MiraiMessageUtilImpl implements SendMessageUtil {
 
             if (dice != null) {
                 group.sendMessage(dice);
+            }
+
+            if (quitTime != null){
+                //延时退群
+                if (quitTime > 0) Thread.sleep(quitTime * 1000);
+                group.quit();
             }
 
             log.info("发送消息" + replayInfo.getReplayMessage());
