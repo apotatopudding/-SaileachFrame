@@ -1,15 +1,19 @@
 package top.angelinaBot.model;
 
+import net.mamoe.mirai.Bot;
+import net.mamoe.mirai.IMirai;
 import net.mamoe.mirai.contact.ContactList;
 import net.mamoe.mirai.contact.MemberPermission;
 import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.events.*;
-import net.mamoe.mirai.internal.message.OnlineFriendImage;
-import net.mamoe.mirai.internal.message.OnlineGroupImage;
+//import net.mamoe.mirai.internal.message.OnlineFriendImage;
+//import net.mamoe.mirai.internal.message.OnlineGroupImage;
 import net.mamoe.mirai.message.data.*;
+import org.apache.logging.log4j.message.SimpleMessage;
 
 import java.lang.reflect.InvocationTargetException;
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -95,7 +99,38 @@ public class MessageInfo {
         this.JSONObjectCTS = this.chain.contentToString();
         this.JSONObjectCTMC = this.chain.serializeToMiraiCode();
 
+        for (SingleMessage o: chain){
+            if (o instanceof At) {
+                //艾特消息内容
+                this.atQQList.add(((At) o).getTarget());
+                if (((At) o).getTarget() == this.loginQq){
+                    //如果被艾特则视为被呼叫
+                    this.isCallMe = true;
+                }
+            } else if (o instanceof PlainText) {
+                //文字消息内容
+                this.text = ((PlainText) o).getContent().trim();
+                String[] orders = this.text.split("\\s+");
+                if (orders.length > 0) {
+                    this.keyword = orders[0];
+                    this.args = Arrays.asList(orders);
+                    for (String name: botNames){
+                        if (orders[0].startsWith(name)){
+                            this.isCallMe = true;
+                            this.botName = name;
+                            this.keyword = this.keyword.replace(name, "");
+                            break;
+                        }
+                    }
+                }
+            } else if (o instanceof Image){
+                //图片消息内容
+                this.imgUrlList.add(this.imageUrl((Image) o));
+                this.imgTypeList.add(((Image) o).getImageType());
+            }
+        }
 
+        /*
         for (Object o: chain){
             if (o instanceof At) {
                 //消息艾特内容
@@ -126,7 +161,10 @@ public class MessageInfo {
                 this.imgTypeList.add(((OnlineGroupImage) o).getImageType());
             }
         }
+        */
     }
+
+    private String imageUrl(Image image){ return Image.queryUrl(image); }
 
     public MessageInfo(FriendMessageEvent event, String[] botNames) {
         this.loginQq = event.getBot().getId();
@@ -136,7 +174,7 @@ public class MessageInfo {
         //获取消息体
         MessageChain chain = event.getMessage();
         this.eventString = chain.toString();
-        for (Object o: chain){
+        for (SingleMessage o: chain){
             if (o instanceof At) {
                 //消息艾特内容
                 this.atQQList.add(((At) o).getTarget());
@@ -160,10 +198,10 @@ public class MessageInfo {
                         }
                     }
                 }
-            } else if (o instanceof OnlineFriendImage){ // 编译器有可能因为无法识别Kotlin的class而报红，问题不大能通过编译
+            } else if (o instanceof Image){
                 //消息图片内容
-                this.imgUrlList.add(((OnlineFriendImage) o).getOriginUrl());
-                this.imgTypeList.add(((OnlineFriendImage) o).getImageType());
+                this.imgUrlList.add(Image.queryUrl((Image) o));
+                this.imgTypeList.add(((Image) o).getImageType());
             }
         }
     }
@@ -236,10 +274,10 @@ public class MessageInfo {
                         }
                     }
                 }
-            } else if (o instanceof OnlineFriendImage){ // 编译器有可能因为无法识别Kotlin的class而报红，问题不大能通过编译
+            } else if (o instanceof Image){
             //消息图片内容
-            this.imgUrlList.add(((OnlineFriendImage) o).getOriginUrl());
-            this.imgTypeList.add(((OnlineFriendImage) o).getImageType());
+                this.imgUrlList.add(Image.queryUrl((Image) o));
+                this.imgTypeList.add(((Image) o).getImageType());
         }
         }
     }

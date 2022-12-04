@@ -5,17 +5,20 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import top.angelinaBot.Exception.AngelinaException;
 import top.angelinaBot.container.AngelinaContainer;
 import top.angelinaBot.dao.ActivityMapper;
 import top.angelinaBot.dao.AdminMapper;
 import top.angelinaBot.dao.FunctionMapper;
+import top.angelinaBot.util.AdminUtil;
 import top.angelinaBot.util.MiraiFrameUtil;
 
 import java.io.*;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,12 +43,19 @@ public class AngelinaInitialization implements SmartInitializingSingleton {
     @Autowired
     private FunctionMapper functionMapper;
 
+    @Value("#{'${userConfig.adminQQ}'.split(' ')}")
+    private String[] admin;
+
+    @Value("#{'${userConfig.ownerQQ}'}")
+    private String owner;
+
     /**
      * 该方法仅在加载完所有的Bean以后，Spring完全启动前执行一次
      */
     @Override
     public void afterSingletonsInstantiated() {
         miraiFrameUtil.startMirai();
+        AdminUtil.setAdminList(owner,admin);
         getJsonReplay();
         activityMapper.initActivityTable();
         functionMapper.initFunctionTable();
@@ -61,14 +71,14 @@ public class AngelinaInitialization implements SmartInitializingSingleton {
             File file = new File("chatReplay.json");
             if (file.exists()) {
                 //仅当文件存在时，流式读取文件内容
-                FileReader fileReader = new FileReader(file);
-                Reader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
-                int ch = 0;
+                //FileReader fileReader = new FileReader(file);
+                Reader reader = new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8);
+                int ch;
                 StringBuilder sb = new StringBuilder();
                 while ((ch = reader.read()) != -1) {
                     sb.append((char) ch);
                 }
-                fileReader.close();
+                //fileReader.close();
                 reader.close();
                 String jsonStr = sb.toString();
                 //将文件内容格式化为JSON

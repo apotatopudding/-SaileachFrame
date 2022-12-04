@@ -4,16 +4,24 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Repository
 public interface AdminMapper {
 
     @Insert("insert into a_group_func_close (group_id, func_name) values (#{groupId}, #{funcName});")
     Integer closeFunction(@Param("groupId") Long groupId, @Param("funcName") String funcName);
 
+    @Insert("insert into a_group_func_close (group_id, func_name) values (999999999, #{funcName});")
+    Integer closeAllFunction(@Param("funcName") String funcName);
+
     @Delete("delete from a_group_func_close where group_id=#{groupId} and func_name=#{funcName};")
     Integer openFunction(@Param("groupId") Long groupId, @Param("funcName") String funcName);
+
+    @Delete("delete from a_group_func_close where group_id=999999999 and func_name=#{funcName};")
+    Integer openAllFunction(@Param("funcName") String funcName);
 
     @Select("select count(group_id) from a_group_func_close where group_id=#{groupId} and func_name=#{funcName};")
     Integer canUseFunction(@Param("groupId") Long groupId, @Param("funcName") String funcName);
@@ -26,4 +34,5 @@ public interface AdminMapper {
             "        `func_name` varchar(6) NOT NULL DEFAULT CURRENT_TIMESTAMP\n" +
             "        );")
     Integer initAdminTable();
+
 }

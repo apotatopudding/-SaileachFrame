@@ -116,7 +116,8 @@ public class GroupChatController {
                         }
                     } else if (AngelinaContainer.groupMap.containsKey(message.getKeyword())) {
                         Method method = AngelinaContainer.groupMap.get(message.getKeyword());
-                        if (adminMapper.canUseFunction(message.getGroupId(), method.getName()) == 0) {
+                        //判断该群是否已关闭该功能
+                        if (adminMapper.canUseFunction(message.getGroupId(), method.getName()) == 0 && adminMapper.canUseFunction(999999999L, method.getName()) == 0) {
                             functionMapper.insertFunction(method.getName());
                             ReplayInfo invoke = (ReplayInfo) method.invoke(SpringContextRunner.getBean(method.getDeclaringClass()), message);
                             if (message.isReplay()) {

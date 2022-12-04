@@ -9,34 +9,34 @@
         <version>2.4.0</version>
     </parent>
 
-    <groupId>top.angelina-bot</groupId>
-    <artifactId>angelina-frame</artifactId>
-    <version>1.0.1</version>
+    <groupId>top.saileach-bot</groupId>
+    <artifactId>saileach-frame</artifactId>
+    <version>1.0</version>
 
-    <name>AngelinaFrame</name>
-    <description>Angelina QQ Bot Frame By SpringBoot</description>
-    <url>https://github.com/Strelizia02/AngelinaFrame</url>
+    <name>SaileachFrame</name>
+    <description>Saileach QQ Bot Frame By SpringBoot</description>
+    <url>https://github.com/apotatopudding/SaileachFrame</url>
 
     <licenses>
         <license>
             <name>GNU Affero General Public License v3.0</name>
-            <url>https://github.com/Strelizia02/AngelinaFrame/blob/master/LICENSE</url>
+            <url>https://github.com/apotatopudding/SaileachFrame/blob/main/LICENSE</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
 
     <scm>
         <tag>master</tag>
-        <url>git@github.com:Strelizia02/AngelinaFrame.git</url>
-        <connection>scm:git:git@github.com:Strelizia02/AngelinaFrame.git</connection>
-        <developerConnection>scm:git:git@github.com:Strelizia02/AngelinaFrame.git</developerConnection>
+        <url>https://github.com/apotatopudding/SaileachFrame.git</url>
+        <connection>scm:git:git@github.com:apotatopudding/SaileachFrame.git</connection>
+        <developerConnection>scm:git:git@github.com:apotatopudding/SaileachFrame.git</developerConnection>
     </scm>
 
     <developers>
         <developer>
             <name>strelitzia</name>
             <email>strelitzia@stu.hubu.edu.com</email>
-            <organization>angelina-bot</organization>
+            <organization>saileach-bot</organization>
         </developer>
     </developers>
 
@@ -172,12 +172,12 @@
         <dependency>
             <groupId>net.mamoe</groupId>
             <artifactId>mirai-core-jvm</artifactId>
-            <version>2.10.0</version>
+            <version>2.13.0-RC2</version>
         </dependency>
         <dependency>
             <groupId>net.mamoe</groupId>
             <artifactId>mirai-logging-slf4j-simple</artifactId>
-            <version>2.10.0</version>
+            <version>2.13.0-RC2</version>
         </dependency>
 
         <dependency>
@@ -217,8 +217,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>8</source>
-                    <target>8</target>
+                    <source>14</source>
+                    <target>14</target>
                 </configuration>
             </plugin>
 
@@ -262,17 +262,12 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>3.0.1</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
             </plugin>
         </plugins>
     </build>

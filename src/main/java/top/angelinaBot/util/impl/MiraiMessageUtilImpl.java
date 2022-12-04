@@ -1,21 +1,24 @@
 package top.angelinaBot.util.impl;
 
-import kotlin.coroutines.Continuation;
+
 import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.*;
 import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.message.data.*;
-import net.mamoe.mirai.spi.AudioToSilkService;
 import net.mamoe.mirai.utils.ExternalResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import top.angelinaBot.dao.ActivityMapper;
 import top.angelinaBot.dao.EnableMapper;
 import top.angelinaBot.model.ReplayInfo;
+import top.angelinaBot.util.MiraiFrameUtil;
 import top.angelinaBot.util.SendMessageUtil;
 
+import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Mirai发送消息封装方法
@@ -36,118 +39,142 @@ public class MiraiMessageUtilImpl implements SendMessageUtil {
      */
     @Override
     public void sendGroupMsg(ReplayInfo replayInfo) {
+        if (replayInfo == null){
+            return;
+        }
         activityMapper.sendMessage();
-        try {
-            //获取登录bot
-            Bot bot = Bot.getInstance(replayInfo.getLoginQQ());
-            //获取群对象
-            Group group = bot.getGroupOrFail(replayInfo.getGroupId());
-            //如果对象是关闭群对象，清空所有消息
-            if (this.enableMapper.canUseGroup(replayInfo.getGroupId(), 0) == 1){
-                replayInfo = new ReplayInfo();
+        //解析replayInfo的资源
+        String replayMessage = replayInfo.getReplayMessage();
+        List<InputStream> replayImgList = replayInfo.getReplayImg();
+        InputStream replayAudio = replayInfo.getReplayAudio();
+        String kick = replayInfo.getKick();
+        Long AT = replayInfo.getAT();
+        Integer muted = replayInfo.getMuted();
+        Long nudged = replayInfo.getNudged();
+        Boolean isMutedAll = replayInfo.getMutedAll();
+        Boolean permission = replayInfo.getPermission();
+        Integer diceNum = replayInfo.getDice();
+        Integer recallTime = replayInfo.getRecallTime();
+        Integer quitTime = replayInfo.getQuitTime();
+
+        List<ExternalResource> imgResource = getExternalResource(replayImgList);
+        ExternalResource audioResource = null;
+        if (replayAudio != null) {
+            try {
+                audioResource = ExternalResource.create(replayAudio);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            //解析replayInfo
-            String replayMessage = replayInfo.getReplayMessage();
-            List<ExternalResource> replayImgList = replayInfo.getReplayImg();
-            List<ExternalResource> replayAudioList = replayInfo.getReplayAudio();
-            String kick = replayInfo.getKick();
-            Long AT = replayInfo.getAT();
-            Integer muted = replayInfo.getMuted();
-            Long nudged = replayInfo.getNudged();
-            Boolean isMutedAll = replayInfo.getMutedAll();
-            Boolean permission = replayInfo.getPermission();
-            Dice dice = replayInfo.getDice();
-            Integer recallTime = replayInfo.getRecallTime();
-            Integer quitTime = replayInfo.getQuitTime();
+        }
+        for (Long groupId : replayInfo.getGroupId()) {
+            //如果对象不是关闭群对象，启用发送
+            if (this.enableMapper.canUseGroup(groupId, 0) != 1) {
+                //获取登录bot
+                Bot bot = Bot.getInstance(MiraiFrameUtil.messageIdMap.get(groupId));
+                //获取群对象
+                Group group = bot.getGroupOrFail(groupId);
+                try {
+                    MessageChainBuilder messageChainBuilder = new MessageChainBuilder();
+                    //@，文字和图像任意出现则创建消息链
+                    if (replayMessage != null || AT != null || replayImgList.size() > 0) {
 
+                        //当存在@内容，加入@内容
+                        if (AT != null) {
+                            messageChainBuilder.append(new At(AT));
+                        }
+                        //当存在文字内容，加入文字内容
+                        if (replayMessage != null) {
+                            messageChainBuilder.append(new PlainText(replayMessage));
+                        }
+                        //分为有图和无图的情况，有图的时候，发送完成消息链以后，需要再次去关闭list中的外部资源，防止内存溢出
+                        if (replayImgList.size() > 0) {
+                            for (ExternalResource replayImg : imgResource) {
+                                messageChainBuilder.append(group.uploadImage(replayImg));
+                            }
+                            //构建消息链并发送
+                            MessageChain chain = messageChainBuilder.build();
+                            if (recallTime != null && this.enableMapper.canUseRecall(groupId, 1) == 1) {
+                                MessageReceipt<Group> receipt = group.sendMessage(chain);
+                                receipt.recallIn(recallTime * 1000);
+                            } else group.sendMessage(chain);
 
-            MessageChainBuilder messageChainBuilder = new MessageChainBuilder();
-            //@，文字和图像任意出现则创建消息链
-            if (replayMessage != null || AT != null || replayImgList.size() > 0) {
-
-                //当存在@内容，加入@内容
-                if (AT != null) {
-                    messageChainBuilder.append(new At(AT));
-                }
-                //当存在文字内容，加入文字内容
-                if (replayMessage != null) {
-                    if (replayMessage.contains("杰哥口我") || replayMessage.contains("洁哥口我") || replayMessage.contains("安洁莉娜口我")) {
-                        replayMessage = "达咩";
+                        } else {
+                            //构建消息链并发送
+                            MessageChain chain = messageChainBuilder.build();
+                            group.sendMessage(chain);
+                            log.info("发送消息" + replayInfo.getReplayMessage());
+                        }
                     }
-                    messageChainBuilder.append(new PlainText(replayMessage));
-                }
-                //分为有图和无图的情况，有图的时候，发送完成消息链以后，需要再次去关闭list中的外部资源，防止内存溢出
-                if (replayImgList.size() > 0) {
-                    for (ExternalResource replayImg : replayImgList) {
-                        messageChainBuilder.append(group.uploadImage(replayImg));
+
+                    if (kick != null) {
+                        //踢出群
+                        group.getOrFail(replayInfo.getQq()).kick("");
                     }
-                    //构建消息链并发送
-                    MessageChain chain = messageChainBuilder.build();
-                    if (recallTime != null) {
-                        MessageReceipt<Group> receipt = group.sendMessage(chain);
-                        receipt.recallIn(recallTime * 1000);
-                    } else group.sendMessage(chain);
-                    for (ExternalResource replayImg : replayImgList) {
-                        replayImg.close();
+
+                    if (muted != null) {
+                        //禁言muted分钟
+                        group.getOrFail(replayInfo.getQq()).mute(muted);
                     }
-                } else {
-                    //构建消息链并发送
-                    MessageChain chain = messageChainBuilder.build();
-                    group.sendMessage(chain);
+
+                    if (nudged != null) {
+                        //获取戳一戳的群对象
+                        Member member = group.getOrFail(nudged);
+                        //戳一戳
+                        member.nudge().sendTo(group);
+                    }
+
+                    if (isMutedAll) {
+                        //全体禁言功能开启
+                        group.getSettings().setMuteAll(true);
+                    }
+
+                    //发送语音
+                    if (audioResource != null) {
+                        group.sendMessage(group.uploadAudio(audioResource));
+                    }
+
+                    if (permission) {
+                        MemberPermission memberPermission = group.getBotPermission();
+                        String s = memberPermission.getLevel() + "";
+                        group.sendMessage(s);
+                    }
+
+                    if (diceNum != null) {
+                        Dice dice = new Dice(diceNum);
+                        group.sendMessage(dice);
+                    }
+
+                    if (quitTime != null) {
+                        //延时退群
+                        if (quitTime > 0) Thread.sleep(quitTime * 1000);
+                        group.quit();
+                    }
+
+                    log.info("发送消息成功");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    log.error("发送消息失败");
                 }
             }
-
-            if (kick != null) {
-                //踢出群
-                group.getOrFail(replayInfo.getQq()).kick("");
+            try {
+                Thread.sleep(new Random().nextInt(10)*100);
+            }catch (InterruptedException e){
+                log.error(e.toString());
             }
-
-            if (muted != null) {
-                //禁言muted分钟
-                group.getOrFail(replayInfo.getQq()).mute(muted);
+        }
+        for (ExternalResource replayImg : imgResource) {
+            try {
+                replayImg.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-
-            if (nudged != null) {
-                //获取戳一戳的群对象
-                Member member = group.getOrFail(nudged);
-                //戳一戳
-                member.nudge().sendTo(group);
+        }
+        if (audioResource != null) {
+            try {
+                audioResource.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-
-            if (isMutedAll) {
-                //全体禁言功能开启
-                group.getSettings().setMuteAll(true);
-
-            }
-
-            if (replayAudioList.size() > 0) {
-                //发送语音
-                for (ExternalResource replayAudio : replayAudioList) {
-                    group.sendMessage(group.uploadAudio(replayAudio));
-                    replayAudio.close();
-                }
-            }
-
-            if (permission) {
-                MemberPermission memberPermission = group.getBotPermission();
-                String s = memberPermission.getLevel() + "";
-                group.sendMessage(s);
-            }
-
-            if (dice != null) {
-                group.sendMessage(dice);
-            }
-
-            if (quitTime != null){
-                //延时退群
-                if (quitTime > 0) Thread.sleep(quitTime * 1000);
-                group.quit();
-            }
-
-            log.info("发送消息" + replayInfo.getReplayMessage());
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error("发送消息失败");
         }
     }
 
@@ -156,23 +183,22 @@ public class MiraiMessageUtilImpl implements SendMessageUtil {
         activityMapper.sendMessage();
         //解析replayInfo
         String replayMessage = replayInfo.getReplayMessage();
-        List<ExternalResource> replayImgList = replayInfo.getReplayImg();
-
+        List<ExternalResource> imgResource = getExternalResource(replayInfo.getReplayImg());
         //获取登录bot
         Bot bot = Bot.getInstance(replayInfo.getLoginQQ());
         //获取用户对象
         User user = bot.getFriendOrFail(replayInfo.getQq());
 
         //文字和图像任意出现则创建消息链
-        if (replayMessage != null || replayImgList.size() > 0) {
+        if (replayMessage != null || imgResource.size() > 0) {
             MessageChainBuilder messageChainBuilder = new MessageChainBuilder();
             //当存在文字内容，加入文字内容
             if (replayMessage != null) {
                 messageChainBuilder.append(new PlainText(replayMessage));
             }
             //当存在图片，加入图片的内容
-            if (replayImgList.size() > 0) {
-                for (ExternalResource replayImg : replayImgList) {
+            if (imgResource.size() > 0) {
+                for (ExternalResource replayImg : imgResource) {
                     messageChainBuilder.append(user.uploadImage(replayImg));
                 }
             }
@@ -188,7 +214,7 @@ public class MiraiMessageUtilImpl implements SendMessageUtil {
         activityMapper.sendMessage();
         //解析replayInfo
         String replayMessage = replayInfo.getReplayMessage();
-        List<ExternalResource> replayImgList = replayInfo.getReplayImg();
+        List<ExternalResource> imgResource = getExternalResource(replayInfo.getReplayImg());
 
         //获取登录bot
         Bot bot = Bot.getInstance(replayInfo.getLoginQQ());
@@ -196,15 +222,15 @@ public class MiraiMessageUtilImpl implements SendMessageUtil {
         Stranger stranger = bot.getStrangerOrFail(replayInfo.getQq());
 
         //文字和图像任意出现则创建消息链
-        if (replayMessage != null || replayImgList.size() > 0){
+        if (replayMessage != null || imgResource.size() > 0){
             MessageChainBuilder messageChainBuilder = new MessageChainBuilder();
             //当存在文字内容，加入文字内容
             if (replayMessage != null) {
                 messageChainBuilder.append(new PlainText(replayMessage));
             }
             //当存在图片，加入图片的内容
-            if (replayImgList.size() > 0) {
-                for (ExternalResource replayImg : replayImgList) {
+            if (imgResource.size() > 0) {
+                for (ExternalResource replayImg : imgResource) {
                     messageChainBuilder.append(stranger.uploadImage(replayImg));
                 }
             }
@@ -220,25 +246,25 @@ public class MiraiMessageUtilImpl implements SendMessageUtil {
         activityMapper.sendMessage();
         //解析replayInfo
         String replayMessage = replayInfo.getReplayMessage();
-        List<ExternalResource> replayImgList = replayInfo.getReplayImg();
+        List<ExternalResource> imgResource = getExternalResource(replayInfo.getReplayImg());
 
         //获取登录bot
         Bot bot = Bot.getInstance(replayInfo.getLoginQQ());
         //获取群对象
-        Group group = bot.getGroupOrFail(replayInfo.getGroupId());
+        Group group = bot.getGroupOrFail(replayInfo.getGroupId().get(0));
         //获取成员对象
         Member member = group.getOrFail(replayInfo.getQq());
 
         //文字和图像任意出现则创建消息链
-        if (replayMessage != null || replayImgList.size() > 0){
+        if (replayMessage != null || imgResource.size() > 0){
             MessageChainBuilder messageChainBuilder = new MessageChainBuilder();
             //当存在文字内容，加入文字内容
             if (replayMessage != null) {
                 messageChainBuilder.append(new PlainText(replayMessage));
             }
             //当存在图片，加入图片的内容
-            if (replayImgList.size() > 0) {
-                for (ExternalResource replayImg : replayImgList) {
+            if (imgResource.size() > 0) {
+                for (ExternalResource replayImg : imgResource) {
                     messageChainBuilder.append(member.uploadImage(replayImg));
                 }
             }
@@ -247,5 +273,20 @@ public class MiraiMessageUtilImpl implements SendMessageUtil {
             member.sendMessage(chain);
         }
         log.info("发送临时会话私聊消息" + replayInfo.getReplayMessage());
+    }
+
+    private List<ExternalResource> getExternalResource(List<InputStream> replayImgList) {
+        List<ExternalResource> imgResource = new ArrayList<>();
+        if (replayImgList.size() > 0) {
+            for (InputStream in: replayImgList) {
+                try {
+                    ExternalResource externalResource = ExternalResource.create(in);
+                    imgResource.add(externalResource);
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
+            }
+        }
+        return imgResource;
     }
 }

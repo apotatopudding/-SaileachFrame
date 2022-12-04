@@ -150,7 +150,11 @@ public class TextLine {
      * @param use  是否使用背景图
      * @return 生成图片
      */
-    public BufferedImage drawImage(int size, boolean use) {
+    public BufferedImage drawImage(int size,boolean use){
+        return this.drawImage(size, use,false);
+    }
+
+    public BufferedImage drawImage(int size, boolean use, boolean white) {
         if (!line.isEmpty()) {
             if (pointers > width) {
                 width = pointers;
@@ -165,7 +169,7 @@ public class TextLine {
         Color bottomColor;//阴影底色
         Color pink =new Color(245,181,182);//调色粉色
         Color skin = new Color(249,243,227);//调色肉色
-        boolean shadowSwitch = false;//是否开启阴影
+        boolean shadowSwitch;//是否开启阴影
         if (use){
             int setWidth = (width + 2) * size;
             int setHeight = (height + 2) * size;
@@ -204,16 +208,24 @@ public class TextLine {
                 graphics.setColor(new Color(237, 247, 251));
                 graphics.fillRect(size , size , (width + 2) * size, (height + 1) * size);
                 wordColor = Color.PINK;
+                shadowSwitch = true;
                 bottomColor =Color.black;
                 wordFont = new Font("新宋体", Font.BOLD, size);
             }
         }else {
             graphics.setColor(new Color(0, 129, 212));
             graphics.fillRect(0, 0, (width + 4) * size, (height + 3) * size);
-            graphics.setColor(new Color(90, 150, 222));
-            graphics.fillRect(size , size , (width + 2) * size, (height + 1) * size);
-            wordColor = Color.white;
-            shadowSwitch = true;
+            if (white){
+                graphics.setColor(Color.lightGray);
+                graphics.fillRect(size , size , (width + 2) * size, (height + 1) * size);
+                wordColor = Color.black;
+                shadowSwitch = false;
+            }else {
+                graphics.setColor(new Color(90, 150, 222));
+                graphics.fillRect(size , size , (width + 2) * size, (height + 1) * size);
+                wordColor = Color.white;
+                shadowSwitch = true;
+            }
             bottomColor =Color.black;
             wordFont = new Font("新宋体", Font.BOLD, size);
         }
@@ -228,7 +240,7 @@ public class TextLine {
                     graphics.setFont(wordFont);//格式
                     if(shadowSwitch){
                         graphics.setColor(bottomColor);//底色
-                        graphics.drawString(str, x+4,y+4 + size);
+                        graphics.drawString(str, (x+4),y+4 + size);
                     }
                     graphics.setColor(wordColor);//字色
                     graphics.drawString(str, x,y + size);
@@ -256,7 +268,7 @@ public class TextLine {
                     int imgY = ((ImageInfo) obj).getY();
                     int imgWidth = ((ImageInfo) obj).getWidthOfSize();
                     int imgHeight = ((ImageInfo) obj).getHeightOfSize();
-                    graphics.drawImage(img,imgX,imgY,imgWidth * size,imgHeight * size,null);
+                    graphics.drawImage(img,imgX,imgY,imgWidth * size * 2,imgHeight * size * 2,null);
                     x += imgWidth * size;
                 }
                 if (obj instanceof Integer) {

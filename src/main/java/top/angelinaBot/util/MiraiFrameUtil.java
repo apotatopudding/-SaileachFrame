@@ -22,6 +22,8 @@ import top.angelinaBot.model.MessageInfo;
 
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
+import java.sql.Array;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -78,11 +80,19 @@ public class MiraiFrameUtil {
         if (qqList.length == 0 || qqList.length != pwList.length){
             throw new AngelinaException("当前配置文件中账号密码配置有误，请审视配置文件");
         }
-
+/*
+        if (Arrays.equals(botNames, new String[]{""})) {
+            throw new AngelinaException("请填写bot的名称！");
+        }
+*/
         for (int i = 0; i < qqList.length; i++) {
             //循环登录所有配置的qq账号，如果有需要滑块验证的，需要单独解决
-            Bot bot = BotFactory.INSTANCE.newBot(Long.parseLong(qqList[i]), pwList[i], new BotConfiguration() {{
+            long qq = Long.parseLong(qqList[i]);
+            Bot bot = BotFactory.INSTANCE.newBot(qq, pwList[i], new BotConfiguration() {{
+                log.info("尝试登录{}",qq);
                 setProtocol(MiraiProtocol.IPAD);
+                fileBasedDeviceInfo("runFile/device.json");
+                /*
                 setDeviceInfo(bot -> new DeviceInfo("Huawei.856832.001".getBytes(StandardCharsets.UTF_8),
                         "nova75g".getBytes(StandardCharsets.UTF_8),
                         "JEF-AN20".getBytes(StandardCharsets.UTF_8),
@@ -104,6 +114,7 @@ public class MiraiFrameUtil {
                         "342086728277870",
                         "wifi".getBytes(StandardCharsets.UTF_8)
                 ));
+                */
             }});
             try {
                 bot.login();
@@ -246,6 +257,7 @@ public class MiraiFrameUtil {
             activityMapper.getFriendMessage();
             try {
                 friendChatController.receive(messageInfo);
+                AngelinaEventSource.getInstance().handle2(messageInfo);
             } catch (InvocationTargetException | IllegalAccessException e) {
                 e.printStackTrace();
             }

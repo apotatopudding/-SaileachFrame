@@ -3,7 +3,9 @@ package top.angelinaBot.dao;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface ActivityMapper {
 
     @Insert("insert into a_activity (type) values (0);")
