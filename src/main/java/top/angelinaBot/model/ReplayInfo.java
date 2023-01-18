@@ -1,11 +1,6 @@
 package top.angelinaBot.model;
 
 import lombok.extern.slf4j.Slf4j;
-import net.mamoe.mirai.Bot;
-import net.mamoe.mirai.event.events.GroupMessageEvent;
-import net.mamoe.mirai.message.data.Dice;
-import net.mamoe.mirai.message.data.Image;
-import net.mamoe.mirai.utils.ExternalResource;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -16,7 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author strelitzia

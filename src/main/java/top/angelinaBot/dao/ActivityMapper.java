@@ -1,6 +1,5 @@
 package top.angelinaBot.dao;
 
-import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 import org.springframework.stereotype.Repository;
@@ -9,16 +8,16 @@ import org.springframework.stereotype.Repository;
 public interface ActivityMapper {
 
     @Insert("insert into a_activity (type) values (0);")
-    Integer getGroupMessage();
+    void getGroupMessage();
 
     @Insert("insert into a_activity (type) values (1);")
-    Integer getFriendMessage();
+    void getFriendMessage();
 
     @Insert("insert into a_activity (type) values (2);")
-    Integer getEventMessage();
+    void getEventMessage();
 
     @Insert("insert into a_activity (type) values (3);")
-    Integer sendMessage();
+    void sendMessage();
 
     @Select("CREATE TABLE IF NOT EXISTS `a_activity`  (\n" +
             "        `type` int(255) NOT NULL,\n" +
@@ -26,6 +25,6 @@ public interface ActivityMapper {
             "        );")
     void initActivityTable();
 
-    @Delete("delete from a_activity where time &lt; datetime('now','-1 day');")
-    void clearActivity();
+//    @Delete("delete from a_activity where time = ; datetime('now','-1 day');")
+//    void clearActivity();
 }
