@@ -1,19 +1,11 @@
 package top.angelinaBot.model;
 
-import net.mamoe.mirai.Bot;
-import net.mamoe.mirai.IMirai;
 import net.mamoe.mirai.contact.ContactList;
 import net.mamoe.mirai.contact.MemberPermission;
 import net.mamoe.mirai.contact.NormalMember;
-import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.events.*;
-//import net.mamoe.mirai.internal.message.OnlineFriendImage;
-//import net.mamoe.mirai.internal.message.OnlineGroupImage;
 import net.mamoe.mirai.message.data.*;
-import org.apache.logging.log4j.message.SimpleMessage;
 
-import java.lang.reflect.InvocationTargetException;
-import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -78,10 +70,11 @@ public class MessageInfo {
 
     /**
      * 根据Mirai的事件构建Message，方便后续调用
-     * @param event Mirai事件
+     *
+     * @param event    Mirai事件
      * @param botNames 机器人名称
      */
-    public MessageInfo(GroupMessageEvent event, String[] botNames){
+    public MessageInfo(GroupMessageEvent event, String[] botNames) {
         // Mirai 的事件内容封装
         this.loginQq = event.getBot().getId();
         this.qq = event.getSender().getId();
@@ -99,11 +92,11 @@ public class MessageInfo {
         this.JSONObjectCTS = this.chain.contentToString();
         this.JSONObjectCTMC = this.chain.serializeToMiraiCode();
 
-        for (SingleMessage o: chain){
+        for (SingleMessage o : chain) {
             if (o instanceof At) {
                 //艾特消息内容
                 this.atQQList.add(((At) o).getTarget());
-                if (((At) o).getTarget() == this.loginQq){
+                if (((At) o).getTarget() == this.loginQq) {
                     //如果被艾特则视为被呼叫
                     this.isCallMe = true;
                 }
@@ -114,8 +107,8 @@ public class MessageInfo {
                 if (orders.length > 0) {
                     this.keyword = orders[0];
                     this.args = Arrays.asList(orders);
-                    for (String name: botNames){
-                        if (orders[0].startsWith(name)){
+                    for (String name : botNames) {
+                        if (orders[0].startsWith(name)) {
                             this.isCallMe = true;
                             this.botName = name;
                             this.keyword = this.keyword.replace(name, "");
@@ -123,7 +116,7 @@ public class MessageInfo {
                         }
                     }
                 }
-            } else if (o instanceof Image){
+            } else if (o instanceof Image) {
                 //图片消息内容
                 this.imgUrlList.add(this.imageUrl((Image) o));
                 this.imgTypeList.add(((Image) o).getImageType());
@@ -164,7 +157,9 @@ public class MessageInfo {
         */
     }
 
-    private String imageUrl(Image image){ return Image.queryUrl(image); }
+    private String imageUrl(Image image) {
+        return Image.queryUrl(image);
+    }
 
     public MessageInfo(FriendMessageEvent event, String[] botNames) {
         this.loginQq = event.getBot().getId();
@@ -174,11 +169,11 @@ public class MessageInfo {
         //获取消息体
         MessageChain chain = event.getMessage();
         this.eventString = chain.toString();
-        for (SingleMessage o: chain){
+        for (SingleMessage o : chain) {
             if (o instanceof At) {
                 //消息艾特内容
                 this.atQQList.add(((At) o).getTarget());
-                if (((At) o).getTarget() == this.loginQq){
+                if (((At) o).getTarget() == this.loginQq) {
                     //如果被艾特则视为被呼叫
                     this.isCallMe = true;
                 }
@@ -191,14 +186,14 @@ public class MessageInfo {
                     this.keyword = orders[0];
                     this.args = Arrays.asList(orders);
                     this.isCallMe = true;
-                    for (String name: botNames){
-                        if (orders[0].startsWith(name)){
+                    for (String name : botNames) {
+                        if (orders[0].startsWith(name)) {
                             this.keyword = this.keyword.replace(name, "");
                             break;
                         }
                     }
                 }
-            } else if (o instanceof Image){
+            } else if (o instanceof Image) {
                 //消息图片内容
                 this.imgUrlList.add(Image.queryUrl((Image) o));
                 this.imgTypeList.add(((Image) o).getImageType());
@@ -214,11 +209,11 @@ public class MessageInfo {
         //获取消息体
         MessageChain chain = event.getMessage();
         this.eventString = chain.toString();
-        for (Object o: chain){
+        for (Object o : chain) {
             if (o instanceof At) {
                 //消息艾特内容
                 this.atQQList.add(((At) o).getTarget());
-                if (((At) o).getTarget() == this.loginQq){
+                if (((At) o).getTarget() == this.loginQq) {
                     //如果被艾特则视为被呼叫
                     this.isCallMe = true;
                 }
@@ -231,8 +226,8 @@ public class MessageInfo {
                     this.keyword = orders[0];
                     this.args = Arrays.asList(orders);
                     this.isCallMe = true;
-                    for (String name: botNames){
-                        if (orders[0].startsWith(name)){
+                    for (String name : botNames) {
+                        if (orders[0].startsWith(name)) {
                             this.keyword = this.keyword.replace(name, "");
                             break;
                         }
@@ -241,6 +236,7 @@ public class MessageInfo {
             }
         }
     }
+
     public MessageInfo(GroupTempMessageEvent event, String[] botNames) {
         this.loginQq = event.getBot().getId();
         this.qq = event.getSender().getId();
@@ -250,11 +246,11 @@ public class MessageInfo {
         //获取消息体
         MessageChain chain = event.getMessage();
         this.eventString = chain.toString();
-        for (Object o: chain){
+        for (Object o : chain) {
             if (o instanceof At) {
                 //消息艾特内容
                 this.atQQList.add(((At) o).getTarget());
-                if (((At) o).getTarget() == this.loginQq){
+                if (((At) o).getTarget() == this.loginQq) {
                     //如果被艾特则视为被呼叫
                     this.isCallMe = true;
                 }
@@ -267,22 +263,22 @@ public class MessageInfo {
                     this.keyword = orders[0];
                     this.args = Arrays.asList(orders);
                     this.isCallMe = true;
-                    for (String name: botNames){
-                        if (orders[0].startsWith(name)){
+                    for (String name : botNames) {
+                        if (orders[0].startsWith(name)) {
                             this.keyword = this.keyword.replace(name, "");
                             break;
                         }
                     }
                 }
-            } else if (o instanceof Image){
-            //消息图片内容
+            } else if (o instanceof Image) {
+                //消息图片内容
                 this.imgUrlList.add(Image.queryUrl((Image) o));
                 this.imgTypeList.add(((Image) o).getImageType());
-        }
+            }
         }
     }
 
-    public MessageInfo(BotJoinGroupEvent event){
+    public MessageInfo(BotJoinGroupEvent event) {
         this.loginQq = event.getBot().getId();
         this.groupId = event.getGroup().getId();
         this.event = EventEnum.BotJoinGroupEvent;
@@ -373,17 +369,29 @@ public class MessageInfo {
         return groupId;
     }
 
-    public String getGroupName() { return groupName; }
+    public String getGroupName() {
+        return groupName;
+    }
 
-    public void setGroupName(String groupName) { this.groupName = groupName; }
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
 
-    public String getGroupOwnerName() { return groupOwnerName; }
+    public String getGroupOwnerName() {
+        return groupOwnerName;
+    }
 
-    public void setGroupOwnerName(String groupOwnerName) { this.groupOwnerName = groupOwnerName; }
+    public void setGroupOwnerName(String groupOwnerName) {
+        this.groupOwnerName = groupOwnerName;
+    }
 
-    public ContactList<NormalMember> getMemberList() { return memberList; }
+    public ContactList<NormalMember> getMemberList() {
+        return memberList;
+    }
 
-    public void setMemberList(ContactList<NormalMember> memberList) { this.memberList = memberList; }
+    public void setMemberList(ContactList<NormalMember> memberList) {
+        this.memberList = memberList;
+    }
 
     public void setGroupId(Long groupId) {
         this.groupId = groupId;
@@ -437,23 +445,43 @@ public class MessageInfo {
         isReplay = replay;
     }
 
-    public String getJSONObjectCTS() { return JSONObjectCTS; }
+    public String getJSONObjectCTS() {
+        return JSONObjectCTS;
+    }
 
-    public void setJSONObjectCTS(String JSONObjectCTS) { this.JSONObjectCTS = JSONObjectCTS; }
+    public void setJSONObjectCTS(String JSONObjectCTS) {
+        this.JSONObjectCTS = JSONObjectCTS;
+    }
 
-    public String getJSONObjectCTMC() { return JSONObjectCTMC; }
+    public String getJSONObjectCTMC() {
+        return JSONObjectCTMC;
+    }
 
-    public void setJSONObjectCTMC(String JSONObjectCTMC) { this.JSONObjectCTMC = JSONObjectCTMC; }
+    public void setJSONObjectCTMC(String JSONObjectCTMC) {
+        this.JSONObjectCTMC = JSONObjectCTMC;
+    }
 
-    public String getBotName() { return botName; }
+    public String getBotName() {
+        return botName;
+    }
 
-    public void setBotName(String botName) { this.botName = botName; }
+    public void setBotName(String botName) {
+        this.botName = botName;
+    }
 
-    public MemberPermission getBotPermission() { return botPermission; }
+    public MemberPermission getBotPermission() {
+        return botPermission;
+    }
 
-    public void setBotPermission(MemberPermission botPermission) { this.botPermission = botPermission; }
+    public void setBotPermission(MemberPermission botPermission) {
+        this.botPermission = botPermission;
+    }
 
-    public MessageChain getChain() { return chain; }
+    public MessageChain getChain() {
+        return chain;
+    }
 
-    public void setChain(MessageChain chain) { this.chain = chain; }
+    public void setChain(MessageChain chain) {
+        this.chain = chain;
+    }
 }

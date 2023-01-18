@@ -15,7 +15,8 @@ import top.angelinaBot.model.ReplayInfo;
 import top.angelinaBot.util.MiraiFrameUtil;
 import top.angelinaBot.util.SendMessageUtil;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -32,7 +33,6 @@ public class MiraiMessageUtilImpl implements SendMessageUtil {
 
     @Autowired
     private EnableMapper enableMapper;
-
     /**
      * 发送群消息方法
      * @param replayInfo 发送消息的结构封装
@@ -249,7 +249,7 @@ public class MiraiMessageUtilImpl implements SendMessageUtil {
         List<ExternalResource> imgResource = getExternalResource(replayInfo.getReplayImg());
 
         //获取登录bot
-        Bot bot = Bot.getInstance(replayInfo.getLoginQQ());
+        Bot bot = Bot.getInstance(MiraiFrameUtil.messageIdMap.get(replayInfo.getGroupId().get(0)));
         //获取群对象
         Group group = bot.getGroupOrFail(replayInfo.getGroupId().get(0));
         //获取成员对象

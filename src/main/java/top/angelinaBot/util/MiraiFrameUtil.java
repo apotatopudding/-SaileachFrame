@@ -7,9 +7,7 @@ import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.events.*;
-import net.mamoe.mirai.message.MessageReceipt;
 import net.mamoe.mirai.utils.BotConfiguration;
-import net.mamoe.mirai.utils.DeviceInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -21,8 +19,6 @@ import top.angelinaBot.model.EventEnum;
 import top.angelinaBot.model.MessageInfo;
 
 import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.StandardCharsets;
-import java.sql.Array;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,8 +65,20 @@ public class MiraiFrameUtil {
     @Value("#{'${userConfig.botNames}'.split(' ')}")
     public String[] botNames;
 
+    @Value("#{'${userConfig.typeList}'}")
+    private String typeList;
+
     //维护一个群号/账号服务映射，保证一个群只有一个账号提供服务
     public static final Map<Long, Long> messageIdMap = new HashMap<>();
+
+    public final Map<String, BotConfiguration.MiraiProtocol> type = new HashMap<>();
+    {
+        type.put("IPAD", BotConfiguration.MiraiProtocol.IPAD);
+        type.put("ANDROID_PHONE", BotConfiguration.MiraiProtocol.ANDROID_PHONE);
+        type.put("ANDROID_PAD", BotConfiguration.MiraiProtocol.ANDROID_PAD);
+        type.put("ANDROID_WATCH", BotConfiguration.MiraiProtocol.ANDROID_WATCH);
+        type.put("MACOS", BotConfiguration.MiraiProtocol.MACOS);
+    }
 
     /**
      * Mirai框架的启动方法，一次性启动Mirai并开启消息监听
@@ -80,50 +88,49 @@ public class MiraiFrameUtil {
         if (qqList.length == 0 || qqList.length != pwList.length){
             throw new AngelinaException("当前配置文件中账号密码配置有误，请审视配置文件");
         }
-/*
         if (Arrays.equals(botNames, new String[]{""})) {
             throw new AngelinaException("请填写bot的名称！");
         }
-*/
         for (int i = 0; i < qqList.length; i++) {
             //循环登录所有配置的qq账号，如果有需要滑块验证的，需要单独解决
             long qq = Long.parseLong(qqList[i]);
-            Bot bot = BotFactory.INSTANCE.newBot(qq, pwList[i], new BotConfiguration() {{
-                log.info("尝试登录{}",qq);
-                setProtocol(MiraiProtocol.IPAD);
-                fileBasedDeviceInfo("runFile/device.json");
-                /*
-                setDeviceInfo(bot -> new DeviceInfo("Huawei.856832.001".getBytes(StandardCharsets.UTF_8),
-                        "nova75g".getBytes(StandardCharsets.UTF_8),
-                        "JEF-AN20".getBytes(StandardCharsets.UTF_8),
-                        "Huawei Kirin 985".getBytes(StandardCharsets.UTF_8),
-                        "Huawei".getBytes(StandardCharsets.UTF_8),
-                        "Nova 7".getBytes(StandardCharsets.UTF_8),
-                        "HarmonyOS 2.0".getBytes(StandardCharsets.UTF_8),
-                        "Huawei/Nova/nova:7/MIRAI.200122.001/2736748:user/release-keys".getBytes(StandardCharsets.UTF_8),
-                        "1BBBCCA8-0B4A-2EFC-BE95-E732C84DA5F0".getBytes(StandardCharsets.UTF_8),
-                        "HarmonyOS version 2.0.0.221(C00E208R6P8)".getBytes(StandardCharsets.UTF_8),
-                        "unknown".getBytes(StandardCharsets.UTF_8),
-                        new DeviceInfo.Version(),
-                        "T-Mobile".getBytes(StandardCharsets.UTF_8),
-                        "HarmonyOS".getBytes(StandardCharsets.UTF_8),
-                        "02:00:00:00:00:00".getBytes(StandardCharsets.UTF_8),
-                        "02:00:00:00:00:00".getBytes(StandardCharsets.UTF_8),
-                        "Strelitzia".getBytes(StandardCharsets.UTF_8),
-                        "6e096dd53aa9062c".getBytes(StandardCharsets.UTF_8),
-                        "342086728277870",
-                        "wifi".getBytes(StandardCharsets.UTF_8)
-                ));
-                */
-            }});
+            BotConfiguration.MiraiProtocol miraiProtocol = type.get(typeList);
+            BotConfiguration botConfiguration = new BotConfiguration();
+            //botConfiguration.setDeviceInfo(bot -> new MiraiDeviceGenerator().load(bot));
+            botConfiguration.setProtocol(miraiProtocol);
+            botConfiguration.fileBasedDeviceInfo("runFile/device.json");
+            /*
+            botConfiguration.setDeviceInfo(bot -> new DeviceInfo("Huawei.856832.001".getBytes(StandardCharsets.UTF_8),
+                    "nova75g".getBytes(StandardCharsets.UTF_8),
+                    "JEF-AN20".getBytes(StandardCharsets.UTF_8),
+                    "Huawei Kirin 985".getBytes(StandardCharsets.UTF_8),
+                    "Huawei".getBytes(StandardCharsets.UTF_8),
+                    "Nova 7".getBytes(StandardCharsets.UTF_8),
+                    "HarmonyOS 2.0".getBytes(StandardCharsets.UTF_8),
+                    "Huawei/Nova/nova:7/MIRAI.200122.001/2736748:user/release-keys".getBytes(StandardCharsets.UTF_8),
+                    "1BBBCCA8-0B4A-2EFC-BE95-E732C84DA5F0".getBytes(StandardCharsets.UTF_8),
+                    "HarmonyOS version 2.0.0.221(C00E208R6P8)".getBytes(StandardCharsets.UTF_8),
+                    "unknown".getBytes(StandardCharsets.UTF_8),
+                    new DeviceInfo.Version(),
+                    "T-Mobile".getBytes(StandardCharsets.UTF_8),
+                    "HarmonyOS".getBytes(StandardCharsets.UTF_8),
+                    "02:00:00:00:00:00".getBytes(StandardCharsets.UTF_8),
+                    "02:00:00:00:00:00".getBytes(StandardCharsets.UTF_8),
+                    "Strelitzia".getBytes(StandardCharsets.UTF_8),
+                    "6e096dd53aa9062c".getBytes(StandardCharsets.UTF_8),
+                    "342086728277870",
+                    "wifi".getBytes(StandardCharsets.UTF_8)
+            ));
+            */
+            Bot bot = BotFactory.INSTANCE.newBot(qq, pwList[i], botConfiguration);
             try {
+                log.info("尝试登录 {}",qq);
                 bot.login();
             } catch (Exception e) {
                 e.printStackTrace();
-                log.error(bot.getId() + " 登录失败");
+                log.error("{} 登录失败",bot.getId());
             }
         }
-
         reBuildBotGroupMap();
 
         //监听全部qq账号所接受的消息
@@ -140,9 +147,7 @@ public class MiraiFrameUtil {
         });
 
         //某个Bot被踢出群或退群
-        GlobalEventChannel.INSTANCE.subscribeAlways(BotLeaveEvent.class, event -> {
-            reBuildBotGroupMap();
-        });
+        GlobalEventChannel.INSTANCE.subscribeAlways(BotLeaveEvent.class, event -> reBuildBotGroupMap());
 
         //某个Bot加入了一个新群
         GlobalEventChannel.INSTANCE.subscribeAlways(BotJoinGroupEvent.class, event -> {
@@ -232,9 +237,7 @@ public class MiraiFrameUtil {
         });
 
         //账号掉线
-        GlobalEventChannel.INSTANCE.subscribeAlways(BotOfflineEvent.class, event -> {
-            reBuildBotGroupMap();
-        });
+        GlobalEventChannel.INSTANCE.subscribeAlways(BotOfflineEvent.class, event -> reBuildBotGroupMap());
 
         //账号被禁言
         GlobalEventChannel.INSTANCE.subscribeAlways(BotMuteEvent.class, event -> {
@@ -244,9 +247,7 @@ public class MiraiFrameUtil {
         });
 
         //账号上线
-        GlobalEventChannel.INSTANCE.subscribeAlways(BotOnlineEvent.class, event -> {
-            reBuildBotGroupMap();
-        });
+        GlobalEventChannel.INSTANCE.subscribeAlways(BotOnlineEvent.class, event -> reBuildBotGroupMap());
 
         //收到加群邀请自动忽略
         GlobalEventChannel.INSTANCE.subscribeAlways(BotInvitedJoinGroupRequestEvent.class, BotInvitedJoinGroupRequestEvent::ignore);
