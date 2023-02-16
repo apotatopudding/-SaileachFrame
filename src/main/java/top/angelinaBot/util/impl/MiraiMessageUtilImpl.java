@@ -178,35 +178,74 @@ public class MiraiMessageUtilImpl implements SendMessageUtil {
         }
     }
 
+    /**
+     * 合并了朋友消息和群聊私聊消息，当存在群号的时候自动发送群聊消息，不存在意味着是私聊消息，发送私聊消息
+     * @param replayInfo 回复的消息封装
+     */
     @Override
     public void sendFriendMsg(ReplayInfo replayInfo) {
         activityMapper.sendMessage();
         //解析replayInfo
         String replayMessage = replayInfo.getReplayMessage();
         List<ExternalResource> imgResource = getExternalResource(replayInfo.getReplayImg());
+
         //获取登录bot
         Bot bot = Bot.getInstance(replayInfo.getLoginQQ());
-        //获取用户对象
-        User user = bot.getFriendOrFail(replayInfo.getQq());
-
         //文字和图像任意出现则创建消息链
         if (replayMessage != null || imgResource.size() > 0) {
             MessageChainBuilder messageChainBuilder = new MessageChainBuilder();
-            //当存在文字内容，加入文字内容
-            if (replayMessage != null) {
-                messageChainBuilder.append(new PlainText(replayMessage));
-            }
-            //当存在图片，加入图片的内容
-            if (imgResource.size() > 0) {
-                for (ExternalResource replayImg : imgResource) {
-                    messageChainBuilder.append(user.uploadImage(replayImg));
+            StringBuilder sb = new StringBuilder();
+
+            //如果群号存在，代表发送的是群私聊消息，调用群私聊逻辑
+            if (replayInfo.getGroupId().size()>0) {
+                //获取群对象
+                Group group = bot.getGroupOrFail(replayInfo.getGroupId().get(0));
+                //获取成员对象
+                Member member = group.getOrFail(replayInfo.getQq());
+                sb.append("发送临时会话私聊消息：");
+                //当存在文字内容，加入文字内容
+                if (replayMessage != null) {
+                    messageChainBuilder.append(new PlainText(replayMessage));
+                    sb.append("    文字消息，内容为：").append(replayInfo.getReplayMessage());
                 }
+                //当存在图片，加入图片的内容
+                if (imgResource.size() > 0) {
+                    for (ExternalResource replayImg : imgResource) {
+                        messageChainBuilder.append(member.uploadImage(replayImg));
+                    }
+                    sb.append("    一张图片消息");
+                }
+                //构建消息链并发送
+                MessageChain chain = messageChainBuilder.build();
+                member.sendMessage(chain);
+            }else {
+                //获取用户对象
+                User user = bot.getFriendOrFail(replayInfo.getQq());
+                sb.append("发送朋友私聊消息：");
+                //当存在文字内容，加入文字内容
+                if (replayMessage != null) {
+                    messageChainBuilder.append(new PlainText(replayMessage));
+                    sb.append("    文字消息，内容为：").append(replayInfo.getReplayMessage());
+                }
+                //当存在图片，加入图片的内容
+                if (imgResource.size() > 0) {
+                    for (ExternalResource replayImg : imgResource) {
+                        messageChainBuilder.append(user.uploadImage(replayImg));
+                    }
+                    sb.append("    一张图片消息");
+                }
+                //构建消息链并发送
+                MessageChain chain = messageChainBuilder.build();
+                user.sendMessage(chain);
             }
-            //构建消息链并发送
-            MessageChain chain = messageChainBuilder.build();
-            user.sendMessage(chain);
+            log.info(sb.toString());
+
+
         }
-        log.info("发送朋友私聊消息" + replayInfo.getReplayMessage());
+
+
+
+
     }
 
     @Override
@@ -239,40 +278,6 @@ public class MiraiMessageUtilImpl implements SendMessageUtil {
             stranger.sendMessage(chain);
         }
         log.info("发送陌生人私聊消息" + replayInfo.getReplayMessage());
-    }
-
-    @Override
-    public void sendGroupTempMsg(ReplayInfo replayInfo) {
-        activityMapper.sendMessage();
-        //解析replayInfo
-        String replayMessage = replayInfo.getReplayMessage();
-        List<ExternalResource> imgResource = getExternalResource(replayInfo.getReplayImg());
-
-        //获取登录bot
-        Bot bot = Bot.getInstance(MiraiFrameUtil.messageIdMap.get(replayInfo.getGroupId().get(0)));
-        //获取群对象
-        Group group = bot.getGroupOrFail(replayInfo.getGroupId().get(0));
-        //获取成员对象
-        Member member = group.getOrFail(replayInfo.getQq());
-
-        //文字和图像任意出现则创建消息链
-        if (replayMessage != null || imgResource.size() > 0){
-            MessageChainBuilder messageChainBuilder = new MessageChainBuilder();
-            //当存在文字内容，加入文字内容
-            if (replayMessage != null) {
-                messageChainBuilder.append(new PlainText(replayMessage));
-            }
-            //当存在图片，加入图片的内容
-            if (imgResource.size() > 0) {
-                for (ExternalResource replayImg : imgResource) {
-                    messageChainBuilder.append(member.uploadImage(replayImg));
-                }
-            }
-            //构建消息链并发送
-            MessageChain chain = messageChainBuilder.build();
-            member.sendMessage(chain);
-        }
-        log.info("发送临时会话私聊消息" + replayInfo.getReplayMessage());
     }
 
     private List<ExternalResource> getExternalResource(List<InputStream> replayImgList) {

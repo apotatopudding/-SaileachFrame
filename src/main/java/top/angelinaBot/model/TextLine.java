@@ -259,7 +259,7 @@ public class TextLine {
                 }
                 if (obj instanceof BufferedImage) {
                     BufferedImage bf = (BufferedImage) obj;
-                    graphics.drawImage(bf, x, y, size, size, null);
+                    graphics.drawImage(bf, x, y+1, size, size, null);
                     x += size;
                 }
                 if (obj instanceof ImageInfo){

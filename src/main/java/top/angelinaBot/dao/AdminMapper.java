@@ -12,16 +12,16 @@ import java.util.List;
 public interface AdminMapper {
 
     @Insert("insert into a_group_func_close (group_id, func_name) values (#{groupId}, #{funcName});")
-    void closeFunction(@Param("groupId") Long groupId, @Param("funcName") String funcName);
+    Integer closeFunction(@Param("groupId") Long groupId, @Param("funcName") String funcName);
 
     @Insert("insert into a_group_func_close (group_id, func_name) values (999999999, #{funcName});")
-    void closeAllFunction(@Param("funcName") String funcName);
+    Integer closeAllFunction(@Param("funcName") String funcName);
 
     @Delete("delete from a_group_func_close where group_id=#{groupId} and func_name=#{funcName};")
-    void openFunction(@Param("groupId") Long groupId, @Param("funcName") String funcName);
+    Integer openFunction(@Param("groupId") Long groupId, @Param("funcName") String funcName);
 
     @Delete("delete from a_group_func_close where group_id=999999999 and func_name=#{funcName};")
-    void openAllFunction(@Param("funcName") String funcName);
+    Integer openAllFunction(@Param("funcName") String funcName);
 
     @Select("select count(group_id) from a_group_func_close where group_id=#{groupId} and func_name=#{funcName};")
     Integer canUseFunction(@Param("groupId") Long groupId, @Param("funcName") String funcName);
@@ -33,6 +33,6 @@ public interface AdminMapper {
             "        `group_id` bigInt(255) NOT NULL,\n" +
             "        `func_name` varchar(6) NOT NULL DEFAULT CURRENT_TIMESTAMP\n" +
             "        );")
-    void initAdminTable();
+    Integer initAdminTable();
 
 }

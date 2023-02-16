@@ -1,6 +1,11 @@
 package top.angelinaBot.model;
 
 import lombok.extern.slf4j.Slf4j;
+import net.mamoe.mirai.Bot;
+import net.mamoe.mirai.event.events.GroupMessageEvent;
+import net.mamoe.mirai.message.data.Dice;
+import net.mamoe.mirai.message.data.Image;
+import net.mamoe.mirai.utils.ExternalResource;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -11,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author strelitzia
@@ -54,7 +60,7 @@ public class ReplayInfo {
 
     public ReplayInfo(MessageInfo messageInfo) {
         this.loginQQ = messageInfo.getLoginQq();
-        this.setGroupId(messageInfo.getGroupId());
+        if(messageInfo.getGroupId()!=null) this.setGroupId(messageInfo.getGroupId());
         this.qq = messageInfo.getQq();
         this.name = messageInfo.getName();
     }
@@ -193,6 +199,14 @@ public class ReplayInfo {
         } catch (IOException e) {
             log.error("File读取IO流失败");
         }
+    }
+
+    /**
+     * 以文件流形式插入图片
+     * @param inputStream 输入图片的图片流
+     */
+    public void setReplayImg(InputStream inputStream) {
+            replayImg.add(inputStream);
     }
 
     /**

@@ -147,7 +147,9 @@ public class MiraiFrameUtil {
         });
 
         //某个Bot被踢出群或退群
-        GlobalEventChannel.INSTANCE.subscribeAlways(BotLeaveEvent.class, event -> reBuildBotGroupMap());
+        GlobalEventChannel.INSTANCE.subscribeAlways(BotLeaveEvent.class, event -> {
+            reBuildBotGroupMap();
+        });
 
         //某个Bot加入了一个新群
         GlobalEventChannel.INSTANCE.subscribeAlways(BotJoinGroupEvent.class, event -> {
@@ -237,7 +239,9 @@ public class MiraiFrameUtil {
         });
 
         //账号掉线
-        GlobalEventChannel.INSTANCE.subscribeAlways(BotOfflineEvent.class, event -> reBuildBotGroupMap());
+        GlobalEventChannel.INSTANCE.subscribeAlways(BotOfflineEvent.class, event -> {
+            reBuildBotGroupMap();
+        });
 
         //账号被禁言
         GlobalEventChannel.INSTANCE.subscribeAlways(BotMuteEvent.class, event -> {
@@ -247,7 +251,9 @@ public class MiraiFrameUtil {
         });
 
         //账号上线
-        GlobalEventChannel.INSTANCE.subscribeAlways(BotOnlineEvent.class, event -> reBuildBotGroupMap());
+        GlobalEventChannel.INSTANCE.subscribeAlways(BotOnlineEvent.class, event -> {
+            reBuildBotGroupMap();
+        });
 
         //收到加群邀请自动忽略
         GlobalEventChannel.INSTANCE.subscribeAlways(BotInvitedJoinGroupRequestEvent.class, BotInvitedJoinGroupRequestEvent::ignore);

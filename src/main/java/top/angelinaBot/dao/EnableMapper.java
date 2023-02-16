@@ -15,7 +15,7 @@ public interface EnableMapper {
             " ON CONFLICT(group_id)\n" +
             " DO update set\n" +
             " group_id = #{groupId}, group_close = #{groupClose};"})
-    void closeGroup(@Param("groupId") Long groupId, @Param("groupClose") Integer groupClose);
+    Integer closeGroup(@Param("groupId") Long groupId, @Param("groupClose") Integer groupClose);
 
     //开关Bilibili解析，默认关闭
     @Insert({"insert into a_group_close (group_id, bilibili_close)\n" +
@@ -23,7 +23,7 @@ public interface EnableMapper {
             " ON CONFLICT(group_id)\n" +
             " DO update set\n" +
             " group_id = #{groupId}, bilibili_close = #{bilibiliClose};"})
-    void closeBilibili(@Param("groupId") Long groupId, @Param("bilibiliClose") Integer bilibiliClose);
+    Integer closeBilibili(@Param("groupId") Long groupId, @Param("bilibiliClose") Integer bilibiliClose);
 
     //开关截图解析，默认关闭
     @Insert({"insert into a_group_close (group_id, dhash_close)\n" +
@@ -31,14 +31,14 @@ public interface EnableMapper {
             " ON CONFLICT(group_id)\n" +
             " DO update set\n" +
             " group_id = #{groupId}, dhash_close = #{dHashClose};"})
-    void closeDHash(@Param("groupId") Long groupId, @Param("dHashClose") Integer dHashClose);
+    Integer closeDHash(@Param("groupId") Long groupId, @Param("dHashClose") Integer dHashClose);
 
     @Insert({"insert into a_group_close (group_id, recall_close)\n" +
             " VALUES (#{groupId}, #{recallClose})\n" +
             " ON CONFLICT(group_id)\n" +
             " DO update set\n" +
             " group_id = #{groupId}, recall_close = #{recallClose};"})
-    void closeRecall(@Param("groupId") Long groupId, @Param("recallClose") Integer recallClose);
+    Integer closeRecall(@Param("groupId") Long groupId, @Param("recallClose") Integer recallClose);
 
 
     //查询群组聊天关闭情况

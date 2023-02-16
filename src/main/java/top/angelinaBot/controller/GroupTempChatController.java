@@ -49,7 +49,7 @@ public class GroupTempChatController {
                 Method method = AngelinaContainer.friendMap.get(message.getKeyword());
                 ReplayInfo invoke = (ReplayInfo) method.invoke(SpringContextRunner.getBean(method.getDeclaringClass()), message);
                 if (message.isReplay()) {
-                    sendMessageUtil.sendGroupTempMsg(invoke);
+                    sendMessageUtil.sendFriendMsg(invoke);
                 }
                 return JsonResult.success(invoke);
             }

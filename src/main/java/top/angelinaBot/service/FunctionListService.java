@@ -46,12 +46,10 @@ public class FunctionListService {
                 }else {
                     replayInfo.setReplayImg(getGroupFuncList(messageInfo.getArgs().get(1)));
                 }break;
-
             }
         }else {
             replayInfo.setReplayImg(getFuncList());
         }
-
         return replayInfo;
     }
 
